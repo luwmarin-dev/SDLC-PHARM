@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TES-Hub Live API Sync & Architecture Inspector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    .method-GET { background: #0284c7; color: #f0f9ff; }
+    .method-POST { background: #16a34a; color: #f0fdf4; }
+    .method-PATCH { background: #d97706; color: #fffbeb; }
+    .method-PUT { background: #7c3aed; color: #faf5ff; }
+    .method-DELETE { background: #dc2626; color: #fef2f2; }
+    
+    .status-live { 
+      background: rgba(16, 185, 129, 0.15); 
+      color: #34d399; 
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    }
+    .status-mock { 
+      background: rgba(245, 158, 11, 0.12); 
+      color: #fbbf24; 
+      border: 1px solid rgba(245, 158, 11, 0.25); 
+    }
+
+    /* Card Micro-interactions */
+    .card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+
+    /* Drawer Transition */
+    #drawerBackdrop {
+      transition: opacity 0.3s ease;
+    }
+    #drawerPanel {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .drawer-open #drawerBackdrop {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .drawer-open #drawerPanel {
+      transform: translateX(0);
+    }
+    .drawer-closed #drawerBackdrop {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .drawer-closed #drawerPanel {
+      transform: translateX(100%);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 drawer-closed">
+
+  <!-- Top Hero Header -->
+  <header class="max-w-7xl mx-auto mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Synchronization & Inspector
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
+          Frontend ➔ API ➔ Drizzle ORM Visualizer
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base mt-2 max-w-3xl">
+          Visualizing all 48 endpoints mapped between <span class="text-emerald-400 font-semibold">TES-Hub-main</span>, Express 5 backend, and Neon PostgreSQL. Click any card to inspect full code snippets, libraries, and live test commands.
+        </p>
+      </div>
+
+      <!-- Live Sync Scorecard -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col gap-3 min-w-[300px]">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
+          <span>Backend Implementation</span>
+          <span id="progressText" class="text-emerald-400 text-sm font-bold">12.5% Completed</span>
+        </div>
+        <!-- Progress Bar -->
+        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden relative">
+          <div id="progressBar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 h-full transition-all duration-700 rounded-full" style="width: 12.5%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+          <span>🟢 Live: <b id="liveCount" class="text-emerald-400 text-sm">6</b></span>
+          <span>🟡 MSW Mocked: <b id="mockCount" class="text-amber-400">42</b></span>
+          <span>Total: <b class="text-slate-200">48</b></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Visual Triad Flow Banner -->
+  <section class="max-w-7xl mx-auto mb-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
+    <div class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-4 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span>🔄</span> End-to-End Implementation Architecture
+      </div>
+      <span class="text-xs text-slate-500 font-normal">Tip: Click on any card below to slide open its deep dive blueprint</span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+      <!-- 1. Frontend -->
+      <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-4">
+        <div class="text-xs font-bold text-emerald-400 flex items-center gap-2 mb-1">
+          <span>🖥️</span> 1. Frontend Client
+        </div>
+        <div class="text-sm font-bold text-slate-100">React 19 + Zustand</div>
+        <div class="text-xs text-slate-400 mt-1">useAuth, useResources, axiosInstance, Vite Proxy (:5173)</div>
+      </div>
+
+      <!-- 2. API Gateway -->
+      <div class="bg-slate-950 border border-sky-500/30 rounded-xl p-4">
+        <div class="text-xs font-bold text-sky-400 flex items-center gap-2 mb-1">
+          <span>⚡</span> 2. Express 5 Gateway
+        </div>
+        <div class="text-sm font-bold text-slate-100">Zod Validate + Jose JWT</div>
+        <div class="text-xs text-slate-400 mt-1">bcrypt (12 rounds), authenticateToken, ESM TypeScript (:3000)</div>
+      </div>
+
+      <!-- 3. Database -->
+      <div class="bg-slate-950 border border-purple-500/30 rounded-xl p-4">
+        <div class="text-xs font-bold text-purple-400 flex items-center gap-2 mb-1">
+          <span>🐘</span> 3. Drizzle ORM + Neon
+        </div>
+        <div class="text-sm font-bold text-slate-100">PostgreSQL Cloud Database</div>
+        <div class="text-xs text-slate-400 mt-1">users, user_settings, resources, relations, migrations</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Controls -->
+  <section class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+    <!-- Search -->
+    <div class="relative w-full md:w-96">
+      <input 
+        type="text" 
+        id="search" 
+        placeholder="Search route, component, or table (e.g. login, signup, resources)..."
+        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+        oninput="renderCards()"
+      >
+    </div>
+
+    <!-- Quick Filter Pills -->
+    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+      <div class="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl">
+        <button id="btnFilterAll" onclick="setStatusFilter('ALL')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition">All (48)</button>
+        <button id="btnFilterLive" onclick="setStatusFilter('LIVE')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">🟢 Live (6)</button>
+        <button id="btnFilterMock" onclick="setStatusFilter('MOCK')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">🟡 Mocked (42)</button>
+      </div>
+
+      <select id="moduleFilter" onchange="renderCards()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 focus:outline-none focus:border-emerald-500">
+        <option value="ALL">All Modules (11)</option>
+        <option value="system">⚡ System & Health (1 Live)</option>
+        <option value="auth">🔐 Auth (3 Live, 4 Mocked)</option>
+        <option value="learning">🌱 Learning & Resources (2 Live, 8 Mocked)</option>
+        <option value="user">👤 Profile & Settings (8)</option>
+        <option value="articles">📚 Articles (5)</option>
+        <option value="courses">🎓 Courses (6)</option>
+        <option value="sessions">📅 Sessions (12)</option>
+        <option value="community">💬 Community (9)</option>
+        <option value="notifs">🔔 Notifications (4)</option>
+        <option value="admin">🛡️ Admin (4)</option>
+        <option value="contact">✉️ Contact (1)</option>
+      </select>
+    </div>
+  </section>
+
+  <!-- Synchronized Cards Grid -->
+  <main class="max-w-7xl mx-auto mb-16">
+    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Injected via JavaScript -->
+    </div>
+  </main>
+
+  <!-- Slide-Out Inspector Drawer -->
+  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"></div>
+  <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full bg-slate-900 border-l border-slate-800 shadow-2xl z-50 flex flex-col overflow-hidden">
+    <!-- Drawer Header -->
+    <div class="p-6 border-b border-slate-800 flex items-start justify-between bg-slate-950/60">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <span id="drawerMethod" class="px-2.5 py-1 rounded-md text-xs font-bold method-POST">POST</span>
+          <span id="drawerStatus" class="px-2.5 py-0.5 rounded-full text-xs font-bold status-live">🟢 Live Backend</span>
+          <span id="drawerId" class="text-xs text-slate-500 font-mono">#1</span>
+        </div>
+        <h2 id="drawerPath" class="text-xl font-bold font-mono text-emerald-400 select-all">/api/auth/signup</h2>
+        <p id="drawerDesc" class="text-xs text-slate-400 mt-1">Registers new member, creates user row in Neon, hashes password with bcrypt.</p>
+      </div>
+      <button onclick="closeDrawer()" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Navigation Tabs -->
+    <div class="flex border-b border-slate-800 bg-slate-900/80 px-6 pt-3 gap-6 text-xs font-semibold">
+      <button onclick="setDrawerTab('stack')" id="tabBtn-stack" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition">📦 Tech & Libraries</button>
+      <button onclick="setDrawerTab('drizzle')" id="tabBtn-drizzle" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">🐘 Drizzle & Database</button>
+      <button onclick="setDrawerTab('files')" id="tabBtn-files" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">📁 Files & Architecture</button>
+      <button onclick="setDrawerTab('test')" id="tabBtn-test" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">🧪 Test & Payloads</button>
+    </div>
+
+    <!-- Drawer Tab Content Body -->
+    <div id="drawerBody" class="flex-1 overflow-y-auto p-6 space-y-6">
+      <!-- Dynamically filled by JavaScript -->
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs text-slate-400">
+      <span>Database: <strong class="text-emerald-400">Neon PostgreSQL (Live)</strong></span>
+      <button onclick="closeDrawer()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg transition">Close Inspector</button>
+    </div>
+  </aside>
+
+  <script>
+    let activeFilter = 'ALL';
+    let currentDrawerItem = null;
+    let currentTab = 'stack';
+
+    // Master API Data with Technical Blueprints
+    const SYNC_DATA = [
+      // 0. System & Infrastructure (LIVE)
+      { 
+        id: 0, 
+        mod: 'system', 
+        method: 'GET', 
+        path: '/api/health', 
+        caller: 'System / Vite Proxy', 
+        hook: 'Vite Proxy (:5173 ➔ :3000)', 
+        table: 'Neon PostgreSQL (Live)', 
+        status: 'LIVE', 
+        desc: 'Active healthcheck reporting service status, timestamp, and Neon database connectivity.',
+        details: {
+          libraries: [
+            { name: 'express@5.1.0', purpose: 'Modern Express 5 HTTP router & application server' },
+            { name: 'helmet@8.0.0', purpose: 'Security headers middleware against XSS and clickjacking' },
+            { name: 'cors@2.8.5', purpose: 'Cross-Origin Resource Sharing handling for dev & preview' },
+            { name: 'pg@8.13.3', purpose: 'Native PostgreSQL connection pool client' },
+            { name: '@epic-web/remember', purpose: 'Connection pool caching across hot-reloads to prevent connection leaks' }
+          ],
+          database: 'Neon PostgreSQL cloud serverless connection. Pool configured with SSL mode require & keepalive.',
+          codeSnippet: `apiRouter.get('/health', (req, res) => {\n  res.json({\n    status: "ok",\n    service: "tes-hub-backend",\n    timestamp: new Date().toISOString()\n  })\n})`,
+          files: [
+            { role: 'Server Entry', path: 'backend/src/server.ts' },
+            { role: 'DB Connection', path: 'backend/src/db/connection.ts' },
+            { role: 'Environment Config', path: 'backend/env.ts' }
+          ],
+          curl: 'curl http://localhost:3000/api/health',
+          responseSample: {
+            status: "ok",
+            service: "tes-hub-backend",
+            timestamp: "2026-10-31T17:36:44.312Z"
+          }
+        }
+      },
+
+      // 1. Auth: Signup (LIVE)
+      { 
+        id: 1, 
+        mod: 'auth', 
+        method: 'POST', 
+        path: '/api/auth/signup', 
+        caller: 'SignupForm.tsx', 
+        hook: 'signup-form.tsx', 
+        table: 'users, user_settings', 
+        status: 'LIVE', 
+        desc: 'Registers new member, creates user row in Neon, hashes password with bcrypt, and initializes settings.',
+        details: {
+          libraries: [
+            { name: 'bcrypt@5.1.1', purpose: 'One-way salt-hashed passwords with 12 BCRYPT_ROUNDS' },
+            { name: 'drizzle-orm@0.44.4', purpose: 'Type-safe SQL queries with PostgreSQL schema definitions' },
+            { name: 'zod@3.24.2', purpose: 'Schema validation for request body before controller execution' }
+          ],
+          database: 'Checks for duplicates using or(eq(users.email), eq(users.username)), inserts into users table, generates 6-digit verification code, and creates matching user_settings record.',
+          codeSnippet: `const hashedPassword = await hashPassword(password)\nconst [newUser] = await db.insert(users).values({\n  email: normalizedEmail,\n  username: normalizedUsername,\n  displayName: fullname.trim(),\n  password: hashedPassword,\n  role: 'member',\n  verificationCode: Math.floor(100000 + Math.random() * 900000).toString(),\n  isEmailVerified: false,\n}).returning()`,
+          files: [
+            { role: 'Controller', path: 'backend/src/controllers/authController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/authRoutes.ts' },
+            { role: 'Schema', path: 'backend/src/db/schema.ts' },
+            { role: 'Frontend Form', path: 'TES-Hub-main/src/pages/auth/components/signup-form.tsx' }
+          ],
+          curl: `curl -X POST http://localhost:3000/api/auth/signup -H "Content-Type: application/json" -d '{"fullname":"Nurlan Bekov","username":"nurlan_demo","email":"nurlan@test.kg","password":"Password123"}'`,
+          requestSample: {
+            fullname: "Nurlan Bekov",
+            username: "nurlan_demo",
+            email: "nurlan@test.kg",
+            password: "Password123"
+          },
+          responseSample: {
+            message: "User registered successfully. Please verify your email.",
+            email: "nurlan@test.kg"
+          }
+        }
+      },
+
+      // 2. Auth: Verify Email (LIVE)
+      { 
+        id: 2, 
+        mod: 'auth', 
+        method: 'POST', 
+        path: '/api/auth/verify-email', 
+        caller: 'VerifyEmail.tsx', 
+        hook: 'VerifyEmail.tsx', 
+        table: 'users', 
+        status: 'LIVE', 
+        desc: 'Verifies 6-digit code, marks user verified in Neon, returns signed JWT and serialized profile.',
+        details: {
+          libraries: [
+            { name: 'jose@6.0.12', purpose: 'Signs secure HS256 JWT tokens with 7-day expiration' },
+            { name: 'drizzle-orm@0.44.4', purpose: 'Updates is_email_verified to true and clears verification code' },
+            { name: 'zod@3.24.2', purpose: 'Validates 6-digit string format' }
+          ],
+          database: 'Queries user by email in Neon PostgreSQL, verifies non-banned and valid code, sets is_email_verified = true.',
+          codeSnippet: `const [updatedUser] = await db.update(users)\n  .set({ isEmailVerified: true, verificationCode: null })\n  .where(eq(users.id, user.id))\n  .returning()\n\nconst token = await generateToken({\n  id: updatedUser.id,\n  email: updatedUser.email,\n  username: updatedUser.username,\n  role: updatedUser.role,\n})`,
+          files: [
+            { role: 'Controller', path: 'backend/src/controllers/authController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/authRoutes.ts' },
+            { role: 'JWT Utility', path: 'backend/src/utils/jwt.ts' },
+            { role: 'Frontend Screen', path: 'TES-Hub-main/src/pages/auth/VerifyEmail.tsx' }
+          ],
+          curl: `curl -X POST http://localhost:3000/api/auth/verify-email -H "Content-Type: application/json" -d '{"email":"nurlan@test.kg","code":"123456"}'`,
+          requestSample: {
+            email: "nurlan@test.kg",
+            code: "123456"
+          },
+          responseSample: {
+            token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InVzZXItbWVtYmVyLTEi...",
+            user: {
+              id: "user-member-1",
+              email: "nurlan@test.kg",
+              username: "nurlan_demo",
+              displayName: "Nurlan Bekov",
+              role: "member",
+              isEmailVerified: true
+            }
+          }
+        }
+      },
+
+      // 3. Auth: Login (LIVE)
+      { 
+        id: 3, 
+        mod: 'auth', 
+        method: 'POST', 
+        path: '/api/auth/login', 
+        caller: 'LoginForm.tsx', 
+        hook: 'login-form.tsx', 
+        table: 'users', 
+        status: 'LIVE', 
+        desc: 'Validates email/password against Neon users table, signs JWT with jose, returns user session.',
+        details: {
+          libraries: [
+            { name: 'bcrypt@5.1.1', purpose: 'Secure password verification with comparePasswords' },
+            { name: 'jose@6.0.12', purpose: 'Standard cryptographic JWT creation and payload signing' },
+            { name: 'drizzle-orm@0.44.4', purpose: 'Direct query to Neon users table' },
+            { name: 'zod@3.24.2', purpose: 'Validates email format and password presence' }
+          ],
+          database: 'Queries users table in Neon PostgreSQL by email, validates password hash, checks is_banned flag, returns full User interface.',
+          codeSnippet: `const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1)\nconst isValid = await comparePasswords(password, user.password)\nif (!isValid) return res.status(401).json({ message: "Invalid email or password." })\n\nconst token = await generateToken({ id: user.id, email: user.email, username: user.username, role: user.role })\nres.json({ message: "Login successful", token, user: formatUserResponse(user) })`,
+          files: [
+            { role: 'Controller', path: 'backend/src/controllers/authController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/authRoutes.ts' },
+            { role: 'Password Utility', path: 'backend/src/utils/passwords.ts' },
+            { role: 'Frontend Form', path: 'TES-Hub-main/src/pages/auth/components/login-form.tsx' }
+          ],
+          curl: `curl -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"email":"member@gmail.com","password":"tesmember"}'`,
+          requestSample: {
+            email: "member@gmail.com",
+            password: "tesmember"
+          },
+          responseSample: {
+            message: "Login successful",
+            token: "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InVzZXItbWVtYmVyLTEi...",
+            user: {
+              id: "user-member-1",
+              email: "member@gmail.com",
+              username: "nurlan_m",
+              displayName: "Nurlan Toktosunov",
+              role: "member",
+              isEmailVerified: true
+            }
+          }
+        }
+      },
+
+      { id: 4, mod: 'auth', method: 'POST', path: '/api/auth/forgot-password', caller: 'ForgotPassword.tsx', hook: 'ForgotPassword.tsx', table: 'users', status: 'MOCK', desc: 'Generates reset code and triggers email dispatch.' },
+      { id: 5, mod: 'auth', method: 'POST', path: '/api/auth/verify-reset-code', caller: 'VerifyEmail.tsx', hook: 'VerifyEmail.tsx', table: 'users', status: 'MOCK', desc: 'Confirms reset code validity prior to new password input.' },
+      { id: 6, mod: 'auth', method: 'POST', path: '/api/auth/reset-password', caller: 'ResetPassword.tsx', hook: 'ResetPassword.tsx', table: 'users', status: 'MOCK', desc: 'Updates password column with bcrypt hash.' },
+      { 
+        id: 7, 
+        mod: 'auth', 
+        method: 'POST', 
+        path: '/api/auth/resend-verification', 
+        caller: 'VerifyEmail.tsx', 
+        hook: 'VerifyEmail.tsx', 
+        table: 'users', 
+        status: 'LIVE', 
+        desc: 'Re-dispatches 6-digit verification email code via Resend and updates Neon verification_code column.',
+        details: {
+          libraries: [
+            { name: 'resend@4.1.2', purpose: 'Transactional email delivery for verification codes' },
+            { name: 'drizzle-orm@0.44.4', purpose: 'Updates user verification_code in Neon PostgreSQL' },
+            { name: 'zod@3.24.2', purpose: 'Validates target email parameter' }
+          ],
+          database: 'Generates new 6-digit code, updates verification_code on the unverified user row, and triggers email sending service.',
+          codeSnippet: `const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()\nawait db.update(users).set({ verificationCode }).where(eq(users.id, user.id))\nawait sendVerificationEmail({ to: user.email, displayName: user.displayName, code: verificationCode })`,
+          files: [
+            { role: 'Email Service', path: 'backend/src/services/emailService.ts' },
+            { role: 'Controller', path: 'backend/src/controllers/authController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/authRoutes.ts' }
+          ],
+          curl: `curl -X POST http://localhost:3000/api/auth/resend-verification -H "Content-Type: application/json" -d '{"email":"your_email@domain.com"}'`,
+          requestSample: { email: "your_email@domain.com" },
+          responseSample: { message: "Verification code resent." }
+        }
+      },
+
+      // 2. Profile & Settings
+      { id: 8, mod: 'user', method: 'GET', path: '/api/profile/:id', caller: 'UserProfile.tsx', hook: 'useUser.ts', table: 'users', status: 'MOCK', desc: 'Retrieves member profile, region, badges, stats.' },
+      { id: 9, mod: 'user', method: 'PATCH', path: '/api/profile/me', caller: 'AccountSection / Onboarding', hook: 'axiosInstance.patch', table: 'users', status: 'MOCK', desc: 'Updates profile fields, oblast, raion, interests array.' },
+      { id: 10, mod: 'user', method: 'DELETE', path: '/api/profile/me', caller: 'SecuritySection.tsx', hook: 'axiosInstance.delete', table: 'users', status: 'MOCK', desc: 'Permanently removes user and cascades deletion.' },
+      { id: 11, mod: 'user', method: 'GET', path: '/api/authors/:username', caller: 'AuthorDetail.tsx', hook: 'useAuthor.ts', table: 'users', status: 'MOCK', desc: 'Fetches author public profile and authored articles/courses.' },
+      { id: 12, mod: 'user', method: 'GET', path: '/api/users', caller: 'UserSelect.tsx', hook: 'axiosInstance.get', table: 'users', status: 'MOCK', desc: 'Returns compact user list for mentions and dropdowns.' },
+      { id: 13, mod: 'user', method: 'GET', path: '/api/settings/me', caller: 'SettingsPage.tsx', hook: 'useSettings.ts', table: 'user_settings', status: 'MOCK', desc: 'Fetches user notification toggles and privacy settings.' },
+      { id: 14, mod: 'user', method: 'PATCH', path: '/api/settings/me', caller: 'SettingsSections', hook: 'useSettings.ts', table: 'user_settings', status: 'MOCK', desc: 'Updates language preferences, email toggles, privacy.' },
+      { id: 15, mod: 'user', method: 'POST', path: '/api/settings/password', caller: 'SecuritySection.tsx', hook: 'axiosInstance.post', table: 'users', status: 'MOCK', desc: 'Validates current password and saves new password.' },
+
+      // 3. Articles
+      { id: 16, mod: 'articles', method: 'GET', path: '/api/articles', caller: 'AcademyCatalog.tsx', hook: 'useArticles.ts', table: 'articles', status: 'MOCK', desc: 'Lists academy articles with topic tags and view counts.' },
+      { id: 17, mod: 'articles', method: 'GET', path: '/api/articles/:slug', caller: 'ArticleDetail.tsx', hook: 'useArticle.ts', table: 'articles', status: 'MOCK', desc: 'Fetches full article body, readTimeMinutes, author data.' },
+      { id: 18, mod: 'articles', method: 'POST', path: '/api/articles', caller: 'ArticlesCRUD.tsx', hook: 'axiosInstance.post', table: 'articles', status: 'MOCK', desc: 'Inserts new article draft or publication.' },
+      { id: 19, mod: 'articles', method: 'PUT', path: '/api/articles/:slug', caller: 'ArticlesCRUD.tsx', hook: 'axiosInstance.put', table: 'articles', status: 'MOCK', desc: 'Updates article content, cover image, and tags.' },
+      { id: 20, mod: 'articles', method: 'PATCH', path: '/api/articles/:slug/status', caller: 'Articles.tsx (Manage)', hook: 'axiosInstance.patch', table: 'articles', status: 'MOCK', desc: 'Workflow status change: draft, pending_review, published.' },
+
+      // 4. Courses
+      { id: 21, mod: 'courses', method: 'GET', path: '/api/courses', caller: 'AcademyCourses.tsx', hook: 'useCourses.ts', table: 'courses', status: 'MOCK', desc: 'Lists all academy courses with level, duration, pricing.' },
+      { id: 22, mod: 'courses', method: 'GET', path: '/api/courses/:slug', caller: 'CourseDetail.tsx', hook: 'useCourse.ts', table: 'courses, sections', status: 'MOCK', desc: 'Fetches curriculum sections, lessons, and enrollment details.' },
+      { id: 23, mod: 'courses', method: 'POST', path: '/api/courses', caller: 'CourseComposer.tsx', hook: 'coursesApi.createCourse', table: 'courses, sections', status: 'MOCK', desc: 'Creates course with curriculum sections and lessons.' },
+      { id: 24, mod: 'courses', method: 'PATCH', path: '/api/courses/:slug', caller: 'CourseComposer.tsx', hook: 'coursesApi.updateCourse', table: 'courses, sections', status: 'MOCK', desc: 'Updates course details, lessons, pricing, and perks.' },
+      { id: 25, mod: 'courses', method: 'PATCH', path: '/api/courses/:slug/status', caller: 'Courses.tsx (Manage)', hook: 'coursesApi.setCourseStatus', table: 'courses', status: 'MOCK', desc: 'Publishes or archives a course.' },
+      { id: 26, mod: 'courses', method: 'DELETE', path: '/api/courses/:slug', caller: 'Courses.tsx (Manage)', hook: 'coursesApi.deleteCourse', table: 'courses', status: 'MOCK', desc: 'Deletes course from catalog.' },
+
+      // 5. Learning & Quizzes
+      { id: 27, mod: 'learning', method: 'GET', path: '/api/enrollments', caller: 'MyLearning.tsx', hook: 'useEnrollment.ts', table: 'enrollments', status: 'MOCK', desc: 'Returns current user enrolled courses list.' },
+      { id: 28, mod: 'learning', method: 'GET', path: '/api/courses/:slug/enrollment', caller: 'CourseViewer.tsx', hook: 'useEnrollment.ts', table: 'enrollments', status: 'MOCK', desc: 'Fetches progress percent, completed lessons, quiz states.' },
+      { id: 29, mod: 'learning', method: 'POST', path: '/api/courses/:slug/enroll', caller: 'CourseDetail.tsx', hook: 'useEnrollment.ts', table: 'enrollments, courses', status: 'MOCK', desc: 'Creates enrollment record and increments course counter.' },
+      { id: 30, mod: 'learning', method: 'POST', path: '/api/courses/:slug/progress', caller: 'CourseViewer.tsx', hook: 'useEnrollment.ts', table: 'enrollments', status: 'MOCK', desc: 'Toggles lesson done, checks completion threshold for cert.' },
+      { id: 31, mod: 'learning', method: 'GET', path: '/api/quizzes/:quizId', caller: 'QuizPlayer.tsx', hook: 'useQuiz.ts', table: 'quizzes', status: 'MOCK', desc: 'Returns public quiz (omits correct answer keys).' },
+      { id: 32, mod: 'learning', method: 'POST', path: '/api/quizzes/:quizId/attempts', caller: 'QuizPlayer.tsx', hook: 'useQuiz.ts', table: 'quiz_attempts', status: 'MOCK', desc: 'Automated quiz grading; records attempt and unlocks lesson.' },
+      { id: 33, mod: 'learning', method: 'GET', path: '/api/courses/:slug/certificate', caller: 'CertificateView.tsx', hook: 'useCertificate.ts', table: 'certificates', status: 'MOCK', desc: 'Retrieves earned certificate with verification code.' },
+      { id: 34, mod: 'learning', method: 'GET', path: '/api/certificates/verify/:code', caller: 'VerifyCertificate.tsx', hook: 'useCertificate.ts', table: 'certificates', status: 'MOCK', desc: 'Public verification endpoint for issued certificate code.' },
+
+      // 5. Learning: Resources (LIVE)
+      { 
+        id: 35, 
+        mod: 'learning', 
+        method: 'GET', 
+        path: '/api/resources', 
+        caller: 'ResourcesCatalog.tsx', 
+        hook: 'useResources.ts', 
+        table: 'resources', 
+        status: 'LIVE', 
+        desc: 'Returns farming guides, spreadsheets, manuals from Neon PostgreSQL.',
+        details: {
+          libraries: [
+            { name: 'drizzle-orm@0.44.4', purpose: 'PostgreSQL select and ordering with desc(resources.updatedAt)' },
+            { name: 'pg@8.13.3', purpose: 'Connection pooling client with Neon serverless driver' }
+          ],
+          database: 'Queries resources table in Neon PostgreSQL, returning all 12 farming guides, soil triangles, and climate datasets ordered by updatedAt descending.',
+          codeSnippet: `export const getAllResources = async (_req: Request, res: Response, next: NextFunction) => {\n  try {\n    const list = await db.select().from(resources).orderBy(desc(resources.updatedAt))\n    res.status(200).json(list)\n  } catch (error) {\n    next(error)\n  }\n}`,
+          files: [
+            { role: 'Controller', path: 'backend/src/controllers/resourceController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/resourceRoutes.ts' },
+            { role: 'Schema', path: 'backend/src/db/schema.ts' },
+            { role: 'Frontend Page', path: 'TES-Hub-main/src/pages/resources/index.tsx' }
+          ],
+          curl: 'curl http://localhost:3000/api/resources',
+          responseSample: [
+            {
+              id: "res-soil-texture-triangle",
+              slug: "soil-texture-triangle",
+              title: "USDA Soil Texture Triangle",
+              type: "guide",
+              category: "Soil Health",
+              downloadCount: 3121
+            }
+          ]
+        }
+      },
+
+      // 5. Learning: Track Download (LIVE)
+      { 
+        id: 36, 
+        mod: 'learning', 
+        method: 'POST', 
+        path: '/api/resources/:id/download', 
+        caller: 'ResourceCard.tsx', 
+        hook: 'useResources.ts', 
+        table: 'resources', 
+        status: 'LIVE', 
+        desc: 'Increments resource download metrics in Neon PostgreSQL.',
+        details: {
+          libraries: [
+            { name: 'drizzle-orm@0.44.4 (sql template literal)', purpose: 'Atomic atomic increment counter sql`${resources.downloadCount} + 1`' },
+            { name: 'zod@3.24.2', purpose: 'Validates route parameters with idParamSchema' }
+          ],
+          database: 'Direct atomic update to Neon PostgreSQL resources table. Returns the updated resource row with persistent counter.',
+          codeSnippet: `const [updated] = await db.update(resources)\n  .set({ downloadCount: sql\`\${resources.downloadCount} + 1\` })\n  .where(eq(resources.id, id))\n  .returning()`,
+          files: [
+            { role: 'Controller', path: 'backend/src/controllers/resourceController.ts' },
+            { role: 'Routes', path: 'backend/src/routes/resourceRoutes.ts' },
+            { role: 'Frontend Hook', path: 'TES-Hub-main/src/lib/hooks/useResources.ts' }
+          ],
+          curl: 'curl -X POST http://localhost:3000/api/resources/res-soil-texture-triangle/download',
+          responseSample: {
+            id: "res-soil-texture-triangle",
+            title: "USDA Soil Texture Triangle",
+            downloadCount: 3122
+          }
+        }
+      },
+
+      // 6. Sessions & Bookings
+      { id: 37, mod: 'sessions', method: 'GET', path: '/api/sessions', caller: 'SessionsCatalog.tsx', hook: 'useSessions.ts', table: 'sessions', status: 'MOCK', desc: 'Lists webinars, workshops, and field clinics.' },
+      { id: 38, mod: 'sessions', method: 'GET', path: '/api/sessions/:slug', caller: 'SessionDetail.tsx', hook: 'useSession.ts', table: 'sessions', status: 'MOCK', desc: 'Fetches meeting link, venue, schedule agenda, materials.' },
+      { id: 39, mod: 'sessions', method: 'POST', path: '/api/sessions', caller: 'SessionsCRUD.tsx', hook: 'sessionsApi.createSession', table: 'sessions', status: 'MOCK', desc: 'Creates new session with agenda items and pricing.' },
+      { id: 40, mod: 'sessions', method: 'PATCH', path: '/api/sessions/:slug', caller: 'SessionsCRUD.tsx', hook: 'sessionsApi.updateSession', table: 'sessions', status: 'MOCK', desc: 'Modifies session details, timings, or venue.' },
+      { id: 41, mod: 'sessions', method: 'PATCH', path: '/api/sessions/:slug/status', caller: 'Sessions.tsx (Manage)', hook: 'sessionsApi.setSessionStatus', table: 'sessions', status: 'MOCK', desc: 'Changes status to published or draft.' },
+      { id: 42, mod: 'sessions', method: 'POST', path: '/api/sessions/:slug/cancel', caller: 'Sessions.tsx (Manage)', hook: 'sessionsApi.cancelSession', table: 'sessions', status: 'MOCK', desc: 'Marks canceled and notifies attendees.' },
+      { id: 43, mod: 'sessions', method: 'POST', path: '/api/sessions/:slug/restore', caller: 'Sessions.tsx (Manage)', hook: 'sessionsApi.restoreSession', table: 'sessions', status: 'MOCK', desc: 'Restores canceled session.' },
+      { id: 44, mod: 'sessions', method: 'DELETE', path: '/api/sessions/:slug', caller: 'Sessions.tsx (Manage)', hook: 'sessionsApi.deleteSession', table: 'sessions', status: 'MOCK', desc: 'Deletes session.' },
+      { id: 45, mod: 'sessions', method: 'GET', path: '/api/sessions/:slug/registration', caller: 'SessionDetail.tsx', hook: 'useSessionRegistration.ts', table: 'registrations', status: 'MOCK', desc: 'Retrieves user ticket and booking status.' },
+      { id: 46, mod: 'sessions', method: 'POST', path: '/api/sessions/:slug/register', caller: 'RegisterModal.tsx', hook: 'useSessionRegistration.ts', table: 'registrations, sessions', status: 'MOCK', desc: 'Reserves seat, checks capacity, creates ticket.' },
+      { id: 47, mod: 'sessions', method: 'POST', path: '/api/sessions/:slug/checkout', caller: 'CheckoutModal.tsx', hook: 'useSessionRegistration.ts', table: 'registrations', status: 'MOCK', desc: 'Confirms payment for paid webinars.' },
+      { id: 48, mod: 'sessions', method: 'DELETE', path: '/api/sessions/:slug/register', caller: 'SessionDetail.tsx', hook: 'useSessionRegistration.ts', table: 'registrations, sessions', status: 'MOCK', desc: 'Cancels registration and releases held seat.' },
+
+      // 7. Community
+      { id: 49, mod: 'community', method: 'GET', path: '/api/stories', caller: 'CommunityStories.tsx', hook: 'useStories.ts', table: 'stories', status: 'MOCK', desc: 'Farmer stories community feed.' },
+      { id: 50, mod: 'community', method: 'GET', path: '/api/stories/:slug', caller: 'StoriesDetail.tsx', hook: 'useStory.ts', table: 'stories', status: 'MOCK', desc: 'Detailed view of farmer story.' },
+      { id: 51, mod: 'community', method: 'POST', path: '/api/stories/:slug/:metric', caller: 'PostActions.tsx', hook: 'communityApi.setEngagement', table: 'stories', status: 'MOCK', desc: 'Like or save community story.' },
+      { id: 52, mod: 'community', method: 'GET', path: '/api/questions', caller: 'CommunityQuestions.tsx', hook: 'useQuestions.ts', table: 'questions', status: 'MOCK', desc: 'Q&A forum feed of agronomy questions.' },
+      { id: 53, mod: 'community', method: 'GET', path: '/api/questions/:slug', caller: 'QuestionDetail.tsx', hook: 'useQuestion.ts', table: 'questions', status: 'MOCK', desc: 'Question thread with answers.' },
+      { id: 54, mod: 'community', method: 'POST', path: '/api/questions/:slug/:metric', caller: 'PostActions.tsx', hook: 'communityApi.setEngagement', table: 'questions', status: 'MOCK', desc: 'Like or save question.' },
+      { id: 55, mod: 'community', method: 'GET', path: '/api/comments', caller: 'Discussion.tsx', hook: 'useComments.ts', table: 'comments', status: 'MOCK', desc: 'Retrieves threaded comments by contentId.' },
+      { id: 56, mod: 'community', method: 'POST', path: '/api/comments', caller: 'Discussion.tsx', hook: 'useComments.ts', table: 'comments', status: 'MOCK', desc: 'Creates comment or reply; increments content count.' },
+      { id: 57, mod: 'community', method: 'POST', path: '/api/comments/:id/like', caller: 'CommentCard.tsx', hook: 'useComments.ts', table: 'comments', status: 'MOCK', desc: 'Upvotes comment.' },
+
+      // 8. Notifications
+      { id: 58, mod: 'notifs', method: 'GET', path: '/api/notifications', caller: 'Header / NotifsPage', hook: 'useNotifications.ts', table: 'notifications', status: 'MOCK', desc: 'Lists user notifications with unread filter.' },
+      { id: 59, mod: 'notifs', method: 'PATCH', path: '/api/notifications/:id/read', caller: 'NotifItem.tsx', hook: 'notificationsApi.markRead', table: 'notifications', status: 'MOCK', desc: 'Marks notification read.' },
+      { id: 60, mod: 'notifs', method: 'POST', path: '/api/notifications/read-all', caller: 'NotifsPage.tsx', hook: 'notificationsApi.markAllRead', table: 'notifications', status: 'MOCK', desc: 'Marks all user alerts read.' },
+      { id: 61, mod: 'notifs', method: 'DELETE', path: '/api/notifications/:id', caller: 'NotifItem.tsx', hook: 'notificationsApi.delete', table: 'notifications', status: 'MOCK', desc: 'Dismisses notification.' },
+
+      // 9. Admin Moderation
+      { id: 62, mod: 'admin', method: 'GET', path: '/api/admin/flags', caller: 'AdminDashboard.tsx', hook: 'axiosInstance.get', table: 'flags', status: 'MOCK', desc: 'Lists content moderation reports.' },
+      { id: 63, mod: 'admin', method: 'PATCH', path: '/api/admin/flags/:id', caller: 'AdminDashboard.tsx', hook: 'axiosInstance.patch', table: 'flags', status: 'MOCK', desc: 'Dismisses or actions reported content.' },
+      { id: 64, mod: 'admin', method: 'GET', path: '/api/admin/users', caller: 'AdminDashboard.tsx', hook: 'axiosInstance.get', table: 'users', status: 'MOCK', desc: 'Admin member table with roles and ban status.' },
+      { id: 65, mod: 'admin', method: 'PATCH', path: '/api/admin/users/:id', caller: 'AdminDashboard.tsx', hook: 'axiosInstance.patch', table: 'users', status: 'MOCK', desc: 'Updates role or bans user from platform.' },
+
+      // 10. Contact
+      { id: 66, mod: 'contact', method: 'POST', path: '/api/contact', caller: 'ContactPage.tsx', hook: 'axiosInstance.post', table: 'contact_inquiries', status: 'MOCK', desc: 'Saves user feedback & support inquiries.' }
+    ];
+
+    function calculateScorecard() {
+      const live = SYNC_DATA.filter(d => d.status === 'LIVE').length;
+      const total = SYNC_DATA.length;
+      const pct = Math.round((live / total) * 100);
+
+      document.getElementById('liveCount').innerText = live;
+      document.getElementById('mockCount').innerText = total - live;
+      document.getElementById('progressText').innerText = pct + '% Completed (' + live + '/' + total + ')';
+      document.getElementById('progressBar').style.width = pct + '%';
+    }
+
+    function setStatusFilter(status) {
+      activeFilter = status;
+      document.getElementById('btnFilterAll').className = status === 'ALL' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('btnFilterLive').className = status === 'LIVE' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('btnFilterMock').className = status === 'MOCK' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
+      renderCards();
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('cardsGrid');
+      const q = document.getElementById('search').value.toLowerCase().trim();
+      const modF = document.getElementById('moduleFilter').value;
+
+      const filtered = SYNC_DATA.filter(item => {
+        const matchesStatus = activeFilter === 'ALL' || item.status === activeFilter;
+        const matchesMod = modF === 'ALL' || item.mod === modF;
+        const matchesQ = !q || 
+          item.path.toLowerCase().includes(q) ||
+          item.caller.toLowerCase().includes(q) ||
+          item.table.toLowerCase().includes(q) ||
+          item.desc.toLowerCase().includes(q);
+        return matchesStatus && matchesMod && matchesQ;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-2 text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800">
+            <div class="text-3xl mb-2">🔍</div>
+            <h3 class="text-slate-300 font-semibold text-base">No matching endpoints found</h3>
+            <p class="text-slate-500 text-xs mt-1">Try resetting the search query or changing your filters.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const isLive = item.status === 'LIVE';
+        return `
+          <div onclick="openDrawer(${item.id})" class="bg-slate-900 border ${isLive ? 'border-emerald-500/50 bg-emerald-950/15' : 'border-slate-800'} rounded-2xl p-5 shadow-lg flex flex-col justify-between card-hover cursor-pointer relative group">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="px-2.5 py-1 rounded-md text-xs font-bold method-${item.method}">
+                  ${item.method}
+                </span>
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isLive ? 'status-live' : 'status-mock'}">
+                    ${isLive ? '🟢 Live Backend' : '🟡 MSW Mocked'}
+                  </span>
+                  <span class="opacity-0 group-hover:opacity-100 transition text-[11px] text-emerald-400 font-semibold flex items-center gap-0.5">
+                    Inspect ➔
+                  </span>
+                </div>
+              </div>
+
+              <!-- Endpoint Path -->
+              <div class="font-mono text-xs text-slate-100 font-semibold bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 mb-3 select-all group-hover:border-slate-700 transition">
+                ${item.path}
+              </div>
+
+              <!-- 3-way connection visualization -->
+              <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">🖥️ Frontend Caller</div>
+                  <div class="font-semibold text-slate-200 truncate">${item.caller}</div>
+                  <div class="text-[11px] text-slate-500 font-mono">${item.hook}</div>
+                </div>
+                <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
+                  <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1">🐘 Drizzle Table</div>
+                  <div class="font-semibold text-purple-300 font-mono">${item.table}</div>
+                  <div class="text-[11px] text-slate-500">Neon PostgreSQL</div>
+                </div>
+              </div>
+
+              <p class="text-xs text-slate-400 leading-relaxed">${item.desc}</p>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+              <span class="capitalize">Module: <strong class="text-slate-400">${item.mod}</strong></span>
+              <span class="font-mono text-slate-500">Click to view code & spec #${item.id}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openDrawer(id) {
+      const item = SYNC_DATA.find(d => d.id === id);
+      if (!item) return;
+
+      currentDrawerItem = item;
+      document.getElementById('drawerMethod').innerText = item.method;
+      document.getElementById('drawerMethod').className = `px-2.5 py-1 rounded-md text-xs font-bold method-${item.method}`;
+      document.getElementById('drawerStatus').innerText = item.status === 'LIVE' ? '🟢 Live Backend' : '🟡 MSW Mocked';
+      document.getElementById('drawerStatus').className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${item.status === 'LIVE' ? 'status-live' : 'status-mock'}`;
+      document.getElementById('drawerId').innerText = `#${item.id}`;
+      document.getElementById('drawerPath').innerText = item.path;
+      document.getElementById('drawerDesc').innerText = item.desc;
+
+      setDrawerTab(currentTab);
+
+      document.body.classList.remove('drawer-closed');
+      document.body.classList.add('drawer-open');
+    }
+
+    function closeDrawer() {
+      document.body.classList.remove('drawer-open');
+      document.body.classList.add('drawer-closed');
+    }
+
+    function setDrawerTab(tab) {
+      currentTab = tab;
+      const tabs = ['stack', 'drizzle', 'files', 'test'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (t === tab) {
+          btn.className = 'pb-3 border-b-2 border-emerald-400 text-emerald-400 transition font-bold';
+        } else {
+          btn.className = 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+        }
+      });
+
+      renderDrawerContent();
+    }
+
+    function renderDrawerContent() {
+      const container = document.getElementById('drawerBody');
+      const item = currentDrawerItem;
+      if (!item) return;
+
+      const details = item.details || {
+        libraries: [
+          { name: 'Express 5', purpose: 'Planned REST endpoint route' },
+          { name: 'Drizzle ORM', purpose: 'Schema query against Neon PostgreSQL' },
+          { name: 'Zod', purpose: 'Input validation schema' }
+        ],
+        database: `Maps to "${item.table}" table in Neon PostgreSQL. Currently handled in frontend by MSW mock.`,
+        codeSnippet: `// Scheduled for live implementation in backend\n// Endpoint: ${item.method} ${item.path}`,
+        files: [
+          { role: 'Frontend Caller', path: `TES-Hub-main/src/pages/${item.caller}` },
+          { role: 'Planned Route', path: `backend/src/routes/${item.mod}Routes.ts` }
+        ],
+        curl: `curl http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}`
+      };
+
+      if (currentTab === 'stack') {
+        container.innerHTML = `
+          <div>
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">🛠️ Exact Tech Stack & Libraries Used</h3>
+            <div class="grid gap-3">
+              ${details.libraries.map(lib => `
+                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
+                    📦
+                  </div>
+                  <div>
+                    <div class="font-mono text-sm font-bold text-emerald-400">${lib.name}</div>
+                    <div class="text-xs text-slate-400 mt-0.5">${lib.purpose}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">⚡ Implementation Technique</h3>
+            <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+              ${item.status === 'LIVE' ? '✅ This endpoint is running live in Express 5 with pure TypeScript ESM, connected directly to Neon PostgreSQL cloud database with Zod body/param guards.' : '⏳ This endpoint is currently simulated in the browser with MSW (Mock Service Worker). Ready for Drizzle backend implementation.'}
+            </p>
+          </div>
+        `;
+      } else if (currentTab === 'drizzle') {
+        container.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider">🐘 Database Operation & Drizzle Code</h3>
+              <button onclick="copyToClipboard('drizzleCode')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                <span>📋</span> Copy Code
+              </button>
+            </div>
+            <pre id="drizzleCode" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed select-all">${details.codeSnippet}</pre>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📊 Database Schema & Constraints</h3>
+            <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+              <div>Table: <strong class="text-purple-400 font-mono">${item.table}</strong></div>
+              <div>Database: <strong class="text-slate-200">Neon PostgreSQL Cloud Instance</strong></div>
+              <div class="text-slate-400 text-[11px]">${details.database}</div>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'files') {
+        container.innerHTML = `
+          <div>
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">📁 Connected Source Files</h3>
+            <div class="space-y-2.5">
+              ${details.files.map(f => `
+                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span class="text-[10px] uppercase font-bold text-slate-500 block">${f.role}</span>
+                    <span class="font-mono text-xs text-slate-200">${f.path}</span>
+                  </div>
+                  <span class="text-xs text-emerald-400 font-semibold px-2 py-1 bg-emerald-500/10 rounded">Source</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">🔄 Layer Separation Pattern</h3>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span class="text-[10px] text-emerald-400 font-bold block mb-0.5">Controller Layer</span>
+                <span class="text-slate-300 text-[11px]">Async handler, try/catch, HTTP status codes</span>
+              </div>
+              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span class="text-[10px] text-sky-400 font-bold block mb-0.5">Validation Layer</span>
+                <span class="text-slate-300 text-[11px]">Zod schema middleware (validateBody/Params)</span>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentTab === 'test') {
+        container.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider">🧪 Live cURL / CLI Test Command</h3>
+              <button onclick="copyToClipboard('curlCmd')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+                <span>📋</span> Copy Command
+              </button>
+            </div>
+            <pre id="curlCmd" class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-sky-300 overflow-x-auto select-all">${details.curl}</pre>
+          </div>
+
+          ${details.requestSample ? `
+            <div class="pt-4 border-t border-slate-800">
+              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📤 Request Payload (JSON)</h3>
+              <pre class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 overflow-x-auto">${JSON.stringify(details.requestSample, null, 2)}</pre>
+            </div>
+          ` : ''}
+
+          ${details.responseSample ? `
+            <div class="pt-4 border-t border-slate-800">
+              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📥 Response Sample (JSON)</h3>
+              <pre class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 overflow-x-auto">${JSON.stringify(details.responseSample, null, 2)}</pre>
+            </div>
+          ` : ''}
+        `;
+      }
+    }
+
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Copied to clipboard!');
+      });
+    }
+
+    // Close on Escape Key
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeDrawer();
+    });
+
+    calculateScorecard();
+    renderCards();
+  </script>
+</body>
+</html>

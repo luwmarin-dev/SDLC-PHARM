@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+.npm/
+**/.npm/
+
+# Environment Variables & Secrets (CRITICAL)
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Private Reference / Learning Folder (NEVER COMMIT)
+my folder for you to learn my style and how i code/
+**/my folder for you to learn my style and how i code/
+
+# Production / Build outputs
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.next/
+**/.next/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+**/*.log
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Testing & Coverage
+coverage/
+**/coverage/
+.nyc_output/
+
+# Temporary / Cache files
+.turbo
+.eslintcache
+*.tsbuildinfo

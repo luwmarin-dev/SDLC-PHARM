@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+.post_body h1 {
+  @apply text-[#191c1b] text-3xl font-bold mt-10;
+}
+
+.post_body h2 {
+  @apply text-[#191c1b] text-2xl font-semibold mt-8;
+}
+
+.post_body h3 {
+  @apply text-[#191c1b] text-xl font-semibold mt-6;
+}
+
+.post_body p {
+  @apply text-[#414844] text-base leading-relaxed mt-4;
+}
+
+.post_body a {
+  @apply text-[#1f6d1a] underline;
+}
+
+.post_body strong {
+  @apply font-semibold text-[#191c1b];
+}
+
+.post_body em {
+  @apply italic;
+}
+
+.post_body ul {
+  @apply list-disc pl-6 mt-4 text-[#414844];
+}
+
+.post_body ol {
+  @apply list-decimal pl-6 mt-4 text-[#414844];
+}
+
+.post_body li {
+  @apply mt-2;
+}
+
+.post_body blockquote {
+  @apply border-l-4 border-[#1f6d1a] bg-[#f2f7f2] text-[#414844] text-sm italic px-4 py-3 mt-6 rounded-r-md;
+}
+
+.post_body code {
+  @apply bg-[#f2f4f2] text-[#191c1b] text-sm px-1.5 py-0.5 rounded-xs;
+}
+
+.post_body pre {
+  @apply bg-[#f2f4f2] text-[#191c1b] text-sm p-4 rounded-md mt-4 overflow-x-auto;
+}
+
+.post_body img {
+  @apply w-full rounded-lg mt-6;
+}
+
+.post_body figcaption {
+  @apply text-[#717973] text-xs mt-2 text-center;
+}
+
+.post_body hr {
+  @apply border-t border-[#c1c8c2] my-8;
+}
+
+.post_body table {
+  @apply w-full border-collapse mt-6 text-sm;
+}
+
+.post_body th,
+.post_body td {
+  @apply border border-[#c1c8c2] px-3 py-2 text-left;
+}
+
+.post_body th {
+  @apply bg-[#f9fafb] text-[#191c1b] font-semibold;
+}

@@ -1,0 +1,50 @@
+{
+  "name": "tes-hub-backend",
+  "version": "1.0.0",
+  "description": "Backend API for TES Knowledge Hub",
+  "main": "src/index.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seedResources.ts",
+    "db:seed:users": "tsx src/db/seedUsers.ts",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@epic-web/remember": "^1.1.0",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "custom-env": "^2.0.6",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.44.4",
+    "drizzle-zod": "^0.8.3",
+    "express": "^5.1.0",
+    "helmet": "^8.0.0",
+    "jose": "^6.0.12",
+    "morgan": "^1.10.1",
+    "pg": "^8.13.3",
+    "resend": "^6.37.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.13.8",
+    "@types/pg": "^8.11.11",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  },
+  "allowScripts": {
+    "bcrypt@5.1.1": true
+  }
+}
