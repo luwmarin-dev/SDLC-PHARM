@@ -1,249 +1,441 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TES-Hub Live API Sync & Architecture Inspector</title>
+  <title>SDLC-PHARM • API Architecture & Sync Visualizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
-    
-    .method-GET { background: #0284c7; color: #f0f9ff; }
-    .method-POST { background: #16a34a; color: #f0fdf4; }
-    .method-PATCH { background: #d97706; color: #fffbeb; }
-    .method-PUT { background: #7c3aed; color: #faf5ff; }
-    .method-DELETE { background: #dc2626; color: #fef2f2; }
-    
-    .status-live { 
-      background: rgba(16, 185, 129, 0.15); 
-      color: #34d399; 
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            }
+          }
+        }
+      }
     }
-    .status-mock { 
-      background: rgba(245, 158, 11, 0.12); 
-      color: #fbbf24; 
-      border: 1px solid rgba(245, 158, 11, 0.25); 
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #030712;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Ambient atmospheric glow */
+    .ambient-glow {
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100vw;
+      max-width: 1400px;
+      height: 480px;
+      background: radial-gradient(50% 50% at 50% 30%, rgba(16, 185, 129, 0.12) 0%, rgba(14, 165, 233, 0.06) 50%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
     }
 
-    /* Card Micro-interactions */
-    .card-hover {
+    /* Glassmorphism primitives */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .card-hover:hover {
+    .glass-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5), 0 0 15px rgba(16, 185, 129, 0.15);
+      background: rgba(15, 23, 42, 0.85);
+      border-color: rgba(52, 211, 153, 0.3);
+      box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.12);
+    }
+    .glass-card.card-live {
+      border-color: rgba(16, 185, 129, 0.22);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(15, 23, 42, 0.65) 100%);
+    }
+    .glass-card.card-live:hover {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6), 0 0 25px rgba(16, 185, 129, 0.2);
+    }
+
+    /* HTTP Method Glass Badges */
+    .method-GET { background: rgba(14, 165, 233, 0.15); color: #38bdf8; border: 1px solid rgba(14, 165, 233, 0.3); }
+    .method-POST { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .method-PATCH { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .method-PUT { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .method-DELETE { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    /* Live status badge with radar ping */
+    .status-live {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    }
+    .status-mock {
+      background: rgba(245, 158, 11, 0.08);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.22);
+    }
+
+    .pulse-ring {
+      position: relative;
+    }
+    .pulse-ring::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.6);
+      animation: pingRing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+      z-index: 0;
+    }
+    @keyframes pingRing {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      80%, 100% { transform: scale(2.2); opacity: 0; }
     }
 
     /* Drawer Transition */
     #drawerBackdrop {
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
     #drawerPanel {
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .drawer-open #drawerBackdrop {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .drawer-open #drawerPanel {
-      transform: translateX(0);
-    }
-    .drawer-closed #drawerBackdrop {
-      opacity: 0;
+    .drawer-open #drawerBackdrop { opacity: 1; pointer-events: auto; }
+    .drawer-open #drawerPanel { transform: translateX(0); }
+    .drawer-closed #drawerBackdrop { opacity: 0; pointer-events: none; }
+    .drawer-closed #drawerPanel { transform: translateX(100%); }
+
+    /* Custom Toast Container */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       pointer-events: none;
     }
-    .drawer-closed #drawerPanel {
-      transform: translateX(100%);
+    .toast-item {
+      pointer-events: auto;
+      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.3s ease;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(20px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
     }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(3, 7, 18, 0.5); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* Clean Chip styling */
+    .filter-chip {
+      transition: all 0.2s ease;
     }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
+    .filter-chip.active {
+      background: #10b981;
+      color: #030712;
+      border-color: #10b981;
+      font-weight: 700;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8 drawer-closed">
+<body class="drawer-closed relative">
 
-  <!-- Top Hero Header -->
-  <header class="max-w-7xl mx-auto mb-8">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+  <!-- Ambient background glow -->
+  <div class="ambient-glow"></div>
+
+  <!-- Main Container -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+
+    <!-- Top Navigation Bar -->
+    <header class="mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold tracking-wide">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-ring"></span> Live Architecture & Sync Hub
+            </div>
+            <a href="https://github.com/luwmarin-dev/SDLC-PHARM" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 text-xs font-mono transition">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              <span>luwmarin-dev/SDLC-PHARM</span>
+            </a>
+          </div>
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
+            TES-Hub Architecture & API Inspector
+          </h1>
+          <p class="text-slate-400 text-sm md:text-base mt-2 max-w-2xl leading-relaxed">
+            Real-time synchronization matrix mapping <span class="text-emerald-400 font-semibold">TES-Hub-main</span> React 19 client to the Express 5 ESM backend and <span class="text-purple-400 font-semibold">Neon PostgreSQL</span> database with Drizzle ORM.
+          </p>
+        </div>
+
+        <!-- Metric Scorecard Card -->
+        <div class="glass-panel rounded-2xl p-5 min-w-[320px] flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+          <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1.5">
+              <span>Backend Implementation Progress</span>
+              <span id="progressText" class="text-emerald-400 font-mono font-bold">12.5%</span>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-950/80 rounded-full h-3 border border-slate-800 overflow-hidden p-0.5 mb-3">
+              <div id="progressBar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(16,185,129,0.5)]" style="width: 12.5%;"></div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-800/80 text-center">
+            <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/60">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">🟢 Live</div>
+              <div id="liveCount" class="text-lg font-bold font-mono text-emerald-400">6</div>
+            </div>
+            <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/60">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">🟡 Mocked</div>
+              <div id="mockCount" class="text-lg font-bold font-mono text-amber-400">42</div>
+            </div>
+            <div class="bg-slate-950/60 rounded-xl p-2 border border-slate-800/60">
+              <div class="text-[10px] text-slate-400 font-semibold uppercase">Total</div>
+              <div id="totalCount" class="text-lg font-bold font-mono text-slate-200">48</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Interactive Architecture Triad Banner -->
+    <section class="glass-panel rounded-2xl p-5 md:p-6 mb-8 relative overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-2 text-xs uppercase font-bold text-slate-300 tracking-wider">
+          <span class="text-emerald-400">⚡</span> Full-Stack Request Life Cycle Pipeline
+        </div>
+        <span class="text-xs text-slate-400 font-mono">Click any layer or card to inspect mapped schemas & code</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
+        <!-- 1. Frontend -->
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-emerald-400 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+              <span>🖥️</span> 1. Frontend Client
+            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">Vite :5173</span>
+          </div>
+          <div class="text-sm font-bold text-slate-100">React 19 + TypeScript + Zustand</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+            Axios API Client, MSW Service Worker fallback, Shadcn UI, i18n English/Russian/Kyrgyz.
+          </p>
+        </div>
+
+        <!-- 2. Express 5 -->
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-sky-400 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-sky-400 flex items-center gap-1.5">
+              <span>⚡</span> 2. API Gateway
+            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/10 text-sky-300 border border-sky-500/20">Express 5 :3000</span>
+          </div>
+          <div class="text-sm font-bold text-slate-100">Express 5 + Zod + Jose JWT</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+            Bcrypt 12 rounds, authenticateToken middleware, CORS, Helmet security headers, typed error handler.
+          </p>
+        </div>
+
+        <!-- 3. Neon DB -->
+        <div class="glass-card rounded-xl p-4 border-l-4 border-l-purple-400 relative overflow-hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+              <span>🐘</span> 3. Cloud Database
+            </span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/20">Neon Serverless</span>
+          </div>
+          <div class="text-sm font-bold text-slate-100">Drizzle ORM + PostgreSQL</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+            Type-safe Drizzle schemas (users, user_settings, resources), connection pooling with @epic-web/remember.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Controls: Search, Filters, Views & Sort -->
+    <section class="space-y-4 mb-6">
+      <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+        
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-xl">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search path, component, table, or method (press / to focus)..." 
+            class="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition shadow-inner"
+            oninput="renderView()"
+          >
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white">
+            ✕
+          </button>
+        </div>
+
+        <!-- Filter Segmented Control & View Toggles -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Status Filter -->
+          <div class="inline-flex p-1 rounded-xl bg-slate-900/80 border border-slate-800">
+            <button id="btnFilterAll" onclick="setStatusFilter('ALL')" class="filter-chip active px-3 py-1.5 rounded-lg text-xs font-semibold">All (<span id="chipAllCount">48</span>)</button>
+            <button id="btnFilterLive" onclick="setStatusFilter('LIVE')" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200">🟢 Live (6)</button>
+            <button id="btnFilterMock" onclick="setStatusFilter('MOCK')" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200">🟡 Mock (42)</button>
+          </div>
+
+          <!-- View Mode Toggle -->
+          <div class="inline-flex p-1 rounded-xl bg-slate-900/80 border border-slate-800">
+            <button id="btnViewGrid" onclick="setViewMode('grid')" title="Grid Card View" class="p-1.5 rounded-lg text-emerald-400 bg-slate-800">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            </button>
+            <button id="btnViewTable" onclick="setViewMode('table')" title="Dense Table View" class="p-1.5 rounded-lg text-slate-400 hover:text-white">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            </button>
+            <button id="btnViewGroup" onclick="setViewMode('group')" title="Grouped by Module" class="p-1.5 rounded-lg text-slate-400 hover:text-white">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </button>
+          </div>
+
+          <!-- Sort Dropdown -->
+          <select id="sortSelect" onchange="renderView()" class="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 focus:outline-none focus:border-emerald-500">
+            <option value="id-asc">Sort: Default ID</option>
+            <option value="path-asc">Path (A-Z)</option>
+            <option value="method">Method (GET ➔ POST)</option>
+            <option value="status">Status (Live First)</option>
+            <option value="mod">Module Category</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Module Category Horizontal Chips -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+        <button onclick="setModuleFilter('ALL')" class="mod-chip active shrink-0 px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-500 text-slate-950 font-bold" data-mod="ALL">All Modules (11)</button>
+        <button onclick="setModuleFilter('system')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="system">⚡ System (1)</button>
+        <button onclick="setModuleFilter('auth')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="auth">🔐 Auth (7)</button>
+        <button onclick="setModuleFilter('learning')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="learning">🌱 Learning & Resources (10)</button>
+        <button onclick="setModuleFilter('user')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="user">👤 Profile & Settings (8)</button>
+        <button onclick="setModuleFilter('articles')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="articles">📚 Articles (5)</button>
+        <button onclick="setModuleFilter('courses')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="courses">🎓 Courses (6)</button>
+        <button onclick="setModuleFilter('sessions')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="sessions">📅 Sessions (12)</button>
+        <button onclick="setModuleFilter('community')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="community">💬 Community (9)</button>
+        <button onclick="setModuleFilter('notifs')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="notifs">🔔 Notifications (4)</button>
+        <button onclick="setModuleFilter('admin')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="admin">🛡️ Admin (4)</button>
+        <button onclick="setModuleFilter('contact')" class="mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700" data-mod="contact">✉️ Contact (1)</button>
+      </div>
+    </section>
+
+    <!-- Main Dynamic View Container -->
+    <main id="viewContainer" class="mb-20">
+      <!-- Injected by JavaScript (Grid, Table, or Group view) -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 pt-6 pb-12 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Live Synchronization & Inspector
-        </div>
-        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-sky-400 bg-clip-text text-transparent">
-          Frontend ➔ API ➔ Drizzle ORM Visualizer
-        </h1>
-        <p class="text-slate-400 text-sm md:text-base mt-2 max-w-3xl">
-          Visualizing all 48 endpoints mapped between <span class="text-emerald-400 font-semibold">TES-Hub-main</span>, Express 5 backend, and Neon PostgreSQL. Click any card to inspect full code snippets, libraries, and live test commands.
-        </p>
+        SDLC-PHARM • Built with Express 5, React 19, Drizzle ORM, Neon PostgreSQL
       </div>
-
-      <!-- Live Sync Scorecard -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col gap-3 min-w-[300px]">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-400">
-          <span>Backend Implementation</span>
-          <span id="progressText" class="text-emerald-400 text-sm font-bold">12.5% Completed</span>
-        </div>
-        <!-- Progress Bar -->
-        <div class="w-full bg-slate-950 rounded-full h-3 border border-slate-800 overflow-hidden relative">
-          <div id="progressBar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 h-full transition-all duration-700 rounded-full" style="width: 12.5%;"></div>
-        </div>
-        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
-          <span>🟢 Live: <b id="liveCount" class="text-emerald-400 text-sm">6</b></span>
-          <span>🟡 MSW Mocked: <b id="mockCount" class="text-amber-400">42</b></span>
-          <span>Total: <b class="text-slate-200">48</b></span>
-        </div>
+      <div class="flex items-center gap-4">
+        <span>Neon Database: <strong class="text-emerald-400">Connected</strong></span>
+        <span>Backend: <strong class="text-sky-400">http://localhost:3000</strong></span>
       </div>
-    </div>
-  </header>
+    </footer>
+  </div>
 
-  <!-- Visual Triad Flow Banner -->
-  <section class="max-w-7xl mx-auto mb-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl">
-    <div class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <span>🔄</span> End-to-End Implementation Architecture
-      </div>
-      <span class="text-xs text-slate-500 font-normal">Tip: Click on any card below to slide open its deep dive blueprint</span>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-      <!-- 1. Frontend -->
-      <div class="bg-slate-950 border border-emerald-500/30 rounded-xl p-4">
-        <div class="text-xs font-bold text-emerald-400 flex items-center gap-2 mb-1">
-          <span>🖥️</span> 1. Frontend Client
-        </div>
-        <div class="text-sm font-bold text-slate-100">React 19 + Zustand</div>
-        <div class="text-xs text-slate-400 mt-1">useAuth, useResources, axiosInstance, Vite Proxy (:5173)</div>
-      </div>
-
-      <!-- 2. API Gateway -->
-      <div class="bg-slate-950 border border-sky-500/30 rounded-xl p-4">
-        <div class="text-xs font-bold text-sky-400 flex items-center gap-2 mb-1">
-          <span>⚡</span> 2. Express 5 Gateway
-        </div>
-        <div class="text-sm font-bold text-slate-100">Zod Validate + Jose JWT</div>
-        <div class="text-xs text-slate-400 mt-1">bcrypt (12 rounds), authenticateToken, ESM TypeScript (:3000)</div>
-      </div>
-
-      <!-- 3. Database -->
-      <div class="bg-slate-950 border border-purple-500/30 rounded-xl p-4">
-        <div class="text-xs font-bold text-purple-400 flex items-center gap-2 mb-1">
-          <span>🐘</span> 3. Drizzle ORM + Neon
-        </div>
-        <div class="text-sm font-bold text-slate-100">PostgreSQL Cloud Database</div>
-        <div class="text-xs text-slate-400 mt-1">users, user_settings, resources, relations, migrations</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Controls -->
-  <section class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
-    <!-- Search -->
-    <div class="relative w-full md:w-96">
-      <input 
-        type="text" 
-        id="search" 
-        placeholder="Search route, component, or table (e.g. login, signup, resources)..."
-        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-        oninput="renderCards()"
-      >
-    </div>
-
-    <!-- Quick Filter Pills -->
-    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-      <div class="inline-flex p-1 bg-slate-900 border border-slate-800 rounded-xl">
-        <button id="btnFilterAll" onclick="setStatusFilter('ALL')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition">All (48)</button>
-        <button id="btnFilterLive" onclick="setStatusFilter('LIVE')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">🟢 Live (6)</button>
-        <button id="btnFilterMock" onclick="setStatusFilter('MOCK')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition">🟡 Mocked (42)</button>
-      </div>
-
-      <select id="moduleFilter" onchange="renderCards()" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-300 focus:outline-none focus:border-emerald-500">
-        <option value="ALL">All Modules (11)</option>
-        <option value="system">⚡ System & Health (1 Live)</option>
-        <option value="auth">🔐 Auth (3 Live, 4 Mocked)</option>
-        <option value="learning">🌱 Learning & Resources (2 Live, 8 Mocked)</option>
-        <option value="user">👤 Profile & Settings (8)</option>
-        <option value="articles">📚 Articles (5)</option>
-        <option value="courses">🎓 Courses (6)</option>
-        <option value="sessions">📅 Sessions (12)</option>
-        <option value="community">💬 Community (9)</option>
-        <option value="notifs">🔔 Notifications (4)</option>
-        <option value="admin">🛡️ Admin (4)</option>
-        <option value="contact">✉️ Contact (1)</option>
-      </select>
-    </div>
-  </section>
-
-  <!-- Synchronized Cards Grid -->
-  <main class="max-w-7xl mx-auto mb-16">
-    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Injected via JavaScript -->
-    </div>
-  </main>
-
-  <!-- Slide-Out Inspector Drawer -->
-  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40"></div>
-  <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full bg-slate-900 border-l border-slate-800 shadow-2xl z-50 flex flex-col overflow-hidden">
+  <!-- Slide-Over Inspector Drawer -->
+  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/75 backdrop-blur-md z-40"></div>
+  <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full bg-slate-950/95 border-l border-slate-800 shadow-2xl z-50 flex flex-col overflow-hidden">
+    
     <!-- Drawer Header -->
-    <div class="p-6 border-b border-slate-800 flex items-start justify-between bg-slate-950/60">
+    <div class="p-6 border-b border-slate-800 bg-slate-900/40 flex items-start justify-between gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
           <span id="drawerMethod" class="px-2.5 py-1 rounded-md text-xs font-bold method-POST">POST</span>
           <span id="drawerStatus" class="px-2.5 py-0.5 rounded-full text-xs font-bold status-live">🟢 Live Backend</span>
           <span id="drawerId" class="text-xs text-slate-500 font-mono">#1</span>
         </div>
-        <h2 id="drawerPath" class="text-xl font-bold font-mono text-emerald-400 select-all">/api/auth/signup</h2>
-        <p id="drawerDesc" class="text-xs text-slate-400 mt-1">Registers new member, creates user row in Neon, hashes password with bcrypt.</p>
+        <h2 id="drawerPath" class="text-xl font-bold font-mono text-emerald-400 select-all tracking-tight">/api/auth/signup</h2>
+        <p id="drawerDesc" class="text-xs text-slate-400 mt-1 leading-relaxed">Registers new member, creates user row in Neon, hashes password with bcrypt.</p>
       </div>
-      <button onclick="closeDrawer()" class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
+      <button onclick="closeDrawer()" class="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
     <!-- Drawer Navigation Tabs -->
-    <div class="flex border-b border-slate-800 bg-slate-900/80 px-6 pt-3 gap-6 text-xs font-semibold">
-      <button onclick="setDrawerTab('stack')" id="tabBtn-stack" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition">📦 Tech & Libraries</button>
+    <div class="flex border-b border-slate-800 bg-slate-900/60 px-6 pt-3 gap-6 text-xs font-semibold overflow-x-auto">
+      <button onclick="setDrawerTab('stack')" id="tabBtn-stack" class="pb-3 border-b-2 border-emerald-400 text-emerald-400 transition font-bold">📦 Tech & Libraries</button>
       <button onclick="setDrawerTab('drizzle')" id="tabBtn-drizzle" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">🐘 Drizzle & Database</button>
-      <button onclick="setDrawerTab('files')" id="tabBtn-files" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">📁 Files & Architecture</button>
-      <button onclick="setDrawerTab('test')" id="tabBtn-test" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">🧪 Test & Payloads</button>
+      <button onclick="setDrawerTab('files')" id="tabBtn-files" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">📁 Files & Mappings</button>
+      <button onclick="setDrawerTab('test')" id="tabBtn-test" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">⚡ Test Console</button>
     </div>
 
-    <!-- Drawer Tab Content Body -->
+    <!-- Drawer Tab Body -->
     <div id="drawerBody" class="flex-1 overflow-y-auto p-6 space-y-6">
-      <!-- Dynamically filled by JavaScript -->
+      <!-- Dynamic Content -->
     </div>
 
     <!-- Drawer Footer -->
-    <div class="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs text-slate-400">
-      <span>Database: <strong class="text-emerald-400">Neon PostgreSQL (Live)</strong></span>
-      <button onclick="closeDrawer()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg transition">Close Inspector</button>
+    <div class="p-4 border-t border-slate-800 bg-slate-900/60 flex items-center justify-between text-xs text-slate-400">
+      <span>Database: <strong class="text-emerald-400">Neon PostgreSQL</strong></span>
+      <div class="flex items-center gap-2">
+        <button onclick="copyCurrentCurl()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg transition flex items-center gap-1.5">
+          <span>📋</span> Copy cURL
+        </button>
+        <button onclick="closeDrawer()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg transition">
+          Done
+        </button>
+      </div>
     </div>
   </aside>
 
+  <!-- Modern Floating Toast Container -->
+  <div id="toastContainer"></div>
+
   <script>
     let activeFilter = 'ALL';
+    let activeModule = 'ALL';
+    let currentView = 'grid'; // 'grid' | 'table' | 'group'
     let currentDrawerItem = null;
     let currentTab = 'stack';
 
-    // Master API Data with Technical Blueprints
+    // Original Master API Data with Technical Blueprints
     const SYNC_DATA = [
       // 0. System & Infrastructure (LIVE)
       { 
@@ -587,6 +779,7 @@
       { id: 66, mod: 'contact', method: 'POST', path: '/api/contact', caller: 'ContactPage.tsx', hook: 'axiosInstance.post', table: 'contact_inquiries', status: 'MOCK', desc: 'Saves user feedback & support inquiries.' }
     ];
 
+    // Dynamic Scorecard Calculations
     function calculateScorecard() {
       const live = SYNC_DATA.filter(d => d.status === 'LIVE').length;
       const total = SYNC_DATA.length;
@@ -594,95 +787,252 @@
 
       document.getElementById('liveCount').innerText = live;
       document.getElementById('mockCount').innerText = total - live;
-      document.getElementById('progressText').innerText = pct + '% Completed (' + live + '/' + total + ')';
+      document.getElementById('totalCount').innerText = total;
+      document.getElementById('chipAllCount').innerText = total;
+      document.getElementById('progressText').innerText = pct + '% (' + live + '/' + total + ')';
       document.getElementById('progressBar').style.width = pct + '%';
     }
 
     function setStatusFilter(status) {
       activeFilter = status;
-      document.getElementById('btnFilterAll').className = status === 'ALL' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
-      document.getElementById('btnFilterLive').className = status === 'LIVE' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
-      document.getElementById('btnFilterMock').className = status === 'MOCK' ? 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition' : 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition';
-      renderCards();
+      ['All', 'Live', 'Mock'].forEach(s => {
+        const btn = document.getElementById('btnFilter' + s);
+        if (s.toUpperCase() === status) {
+          btn.className = 'filter-chip active px-3 py-1.5 rounded-lg text-xs font-semibold';
+        } else {
+          btn.className = 'filter-chip px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200';
+        }
+      });
+      renderView();
     }
 
-    function renderCards() {
-      const grid = document.getElementById('cardsGrid');
-      const q = document.getElementById('search').value.toLowerCase().trim();
-      const modF = document.getElementById('moduleFilter').value;
+    function setModuleFilter(mod) {
+      activeModule = mod;
+      document.querySelectorAll('.mod-chip').forEach(btn => {
+        if (btn.dataset.mod === mod) {
+          btn.className = 'mod-chip active shrink-0 px-3 py-1.5 rounded-xl border border-emerald-500 bg-emerald-500 text-slate-950 font-bold';
+        } else {
+          btn.className = 'mod-chip shrink-0 px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/70 text-slate-400 hover:text-slate-200 hover:border-slate-700';
+        }
+      });
+      renderView();
+    }
 
-      const filtered = SYNC_DATA.filter(item => {
+    function setViewMode(mode) {
+      currentView = mode;
+      document.getElementById('btnViewGrid').className = mode === 'grid' ? 'p-1.5 rounded-lg text-emerald-400 bg-slate-800' : 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      document.getElementById('btnViewTable').className = mode === 'table' ? 'p-1.5 rounded-lg text-emerald-400 bg-slate-800' : 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      document.getElementById('btnViewGroup').className = mode === 'group' ? 'p-1.5 rounded-lg text-emerald-400 bg-slate-800' : 'p-1.5 rounded-lg text-slate-400 hover:text-white';
+      renderView();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderView();
+    }
+
+    function getFilteredData() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const sort = document.getElementById('sortSelect').value;
+
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', !q);
+
+      let filtered = SYNC_DATA.filter(item => {
         const matchesStatus = activeFilter === 'ALL' || item.status === activeFilter;
-        const matchesMod = modF === 'ALL' || item.mod === modF;
+        const matchesMod = activeModule === 'ALL' || item.mod === activeModule;
         const matchesQ = !q || 
           item.path.toLowerCase().includes(q) ||
+          item.method.toLowerCase().includes(q) ||
           item.caller.toLowerCase().includes(q) ||
           item.table.toLowerCase().includes(q) ||
-          item.desc.toLowerCase().includes(q);
+          item.desc.toLowerCase().includes(q) ||
+          item.mod.toLowerCase().includes(q);
         return matchesStatus && matchesMod && matchesQ;
       });
 
-      if (filtered.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-2 text-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800">
-            <div class="text-3xl mb-2">🔍</div>
-            <h3 class="text-slate-300 font-semibold text-base">No matching endpoints found</h3>
-            <p class="text-slate-500 text-xs mt-1">Try resetting the search query or changing your filters.</p>
+      // Sorting
+      if (sort === 'path-asc') {
+        filtered.sort((a, b) => a.path.localeCompare(b.path));
+      } else if (sort === 'method') {
+        const order = { 'GET': 1, 'POST': 2, 'PATCH': 3, 'PUT': 4, 'DELETE': 5 };
+        filtered.sort((a, b) => (order[a.method] || 9) - (order[b.method] || 9));
+      } else if (sort === 'status') {
+        filtered.sort((a, b) => (a.status === 'LIVE' ? -1 : 1));
+      } else if (sort === 'mod') {
+        filtered.sort((a, b) => a.mod.localeCompare(b.mod));
+      } else {
+        filtered.sort((a, b) => a.id - b.id);
+      }
+
+      return filtered;
+    }
+
+    function renderView() {
+      const container = document.getElementById('viewContainer');
+      const data = getFilteredData();
+
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-20 glass-panel rounded-2xl border border-slate-800/80">
+            <div class="text-4xl mb-3">🔍</div>
+            <h3 class="text-slate-200 font-bold text-lg">No matching endpoints found</h3>
+            <p class="text-slate-400 text-xs mt-1 max-w-sm mx-auto">Try clearing your search query or switching your status/module filter.</p>
+            <button onclick="clearSearch(); setStatusFilter('ALL'); setModuleFilter('ALL');" class="mt-4 px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">Reset All Filters</button>
           </div>
         `;
         return;
       }
 
-      grid.innerHTML = filtered.map(item => {
-        const isLive = item.status === 'LIVE';
-        return `
-          <div onclick="openDrawer(${item.id})" class="bg-slate-900 border ${isLive ? 'border-emerald-500/50 bg-emerald-950/15' : 'border-slate-800'} rounded-2xl p-5 shadow-lg flex flex-col justify-between card-hover cursor-pointer relative group">
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="px-2.5 py-1 rounded-md text-xs font-bold method-${item.method}">
+      if (currentView === 'grid') {
+        container.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${data.map(item => renderCardHtml(item)).join('')}
+          </div>
+        `;
+      } else if (currentView === 'table') {
+        container.innerHTML = renderTableHtml(data);
+      } else if (currentView === 'group') {
+        container.innerHTML = renderGroupHtml(data);
+      }
+    }
+
+    function renderCardHtml(item) {
+      const isLive = item.status === 'LIVE';
+      return `
+        <div class="glass-card ${isLive ? 'card-live' : ''} rounded-2xl p-5 flex flex-col justify-between relative group cursor-pointer" onclick="openDrawer(${item.id})">
+          <div>
+            <!-- Top Card Bar -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold method-${item.method}">
                   ${item.method}
                 </span>
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isLive ? 'status-live' : 'status-mock'}">
-                    ${isLive ? '🟢 Live Backend' : '🟡 MSW Mocked'}
-                  </span>
-                  <span class="opacity-0 group-hover:opacity-100 transition text-[11px] text-emerald-400 font-semibold flex items-center gap-0.5">
-                    Inspect ➔
-                  </span>
-                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isLive ? 'status-live' : 'status-mock'}">
+                  ${isLive ? '🟢 Live in Backend' : '🟡 MSW Mocked'}
+                </span>
               </div>
-
-              <!-- Endpoint Path -->
-              <div class="font-mono text-xs text-slate-100 font-semibold bg-slate-950 px-3 py-2 rounded-xl border border-slate-800 mb-3 select-all group-hover:border-slate-700 transition">
-                ${item.path}
+              <div class="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition">
+                <button onclick="event.stopPropagation(); copyText('${item.path}', 'Path copied!')" title="Copy Path" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+                <button onclick="event.stopPropagation(); copyItemCurl(${item.id})" title="Copy cURL" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition">
+                  <span class="text-xs">🧪</span>
+                </button>
               </div>
-
-              <!-- 3-way connection visualization -->
-              <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-                <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                  <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-1">🖥️ Frontend Caller</div>
-                  <div class="font-semibold text-slate-200 truncate">${item.caller}</div>
-                  <div class="text-[11px] text-slate-500 font-mono">${item.hook}</div>
-                </div>
-                <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/80">
-                  <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-1">🐘 Drizzle Table</div>
-                  <div class="font-semibold text-purple-300 font-mono">${item.table}</div>
-                  <div class="text-[11px] text-slate-500">Neon PostgreSQL</div>
-                </div>
-              </div>
-
-              <p class="text-xs text-slate-400 leading-relaxed">${item.desc}</p>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-              <span class="capitalize">Module: <strong class="text-slate-400">${item.mod}</strong></span>
-              <span class="font-mono text-slate-500">Click to view code & spec #${item.id}</span>
+            <!-- Route Path -->
+            <div class="font-mono text-xs text-slate-100 font-semibold bg-slate-950/80 px-3 py-2 rounded-xl border border-slate-800/80 mb-3 select-all group-hover:border-slate-700 transition flex items-center justify-between">
+              <span class="truncate">${item.path}</span>
+              <span class="text-[10px] text-slate-500 font-normal ml-2">#${item.id}</span>
+            </div>
+
+            <!-- 2-way Triad Details -->
+            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+              <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
+                <div class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-0.5">🖥️ Frontend Caller</div>
+                <div class="font-semibold text-slate-200 truncate">${item.caller}</div>
+                <div class="text-[11px] text-slate-500 font-mono truncate">${item.hook}</div>
+              </div>
+              <div class="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/60">
+                <div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider mb-0.5">🐘 Drizzle Table</div>
+                <div class="font-semibold text-purple-300 font-mono truncate">${item.table}</div>
+                <div class="text-[11px] text-slate-500">Neon PostgreSQL</div>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed line-clamp-2">${item.desc}</p>
+          </div>
+
+          <!-- Bottom Card Bar -->
+          <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+            <span class="capitalize px-2 py-0.5 rounded bg-slate-900 border border-slate-800 font-mono text-slate-400">${item.mod}</span>
+            <span class="group-hover:text-emerald-400 font-semibold transition flex items-center gap-1">
+              Inspect Spec ➔
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTableHtml(data) {
+      return `
+        <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-950/80 border-b border-slate-800 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
+                <tr>
+                  <th class="py-3 px-4">Method</th>
+                  <th class="py-3 px-4">Path</th>
+                  <th class="py-3 px-4">Status</th>
+                  <th class="py-3 px-4">Frontend Caller</th>
+                  <th class="py-3 px-4">Drizzle Table</th>
+                  <th class="py-3 px-4">Module</th>
+                  <th class="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${data.map(item => {
+                  const isLive = item.status === 'LIVE';
+                  return `
+                    <tr class="hover:bg-slate-900/60 transition cursor-pointer" onclick="openDrawer(${item.id})">
+                      <td class="py-3 px-4 font-mono">
+                        <span class="px-2 py-0.5 rounded text-[11px] font-bold method-${item.method}">${item.method}</span>
+                      </td>
+                      <td class="py-3 px-4 font-mono font-semibold text-slate-200 select-all">${item.path}</td>
+                      <td class="py-3 px-4">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isLive ? 'status-live' : 'status-mock'}">
+                          ${isLive ? '🟢 Live' : '🟡 Mock'}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4 text-slate-300 truncate max-w-[160px]">${item.caller}</td>
+                      <td class="py-3 px-4 font-mono text-purple-300 truncate max-w-[160px]">${item.table}</td>
+                      <td class="py-3 px-4 capitalize text-slate-400">${item.mod}</td>
+                      <td class="py-3 px-4 text-right">
+                        <button class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold transition">Inspect</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGroupHtml(data) {
+      const groups = {};
+      data.forEach(item => {
+        if (!groups[item.mod]) groups[item.mod] = [];
+        groups[item.mod].push(item);
+      });
+
+      return Object.keys(groups).map(mod => {
+        const items = groups[mod];
+        const liveCount = items.filter(i => i.status === 'LIVE').length;
+        return `
+          <div class="mb-8">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="capitalize text-lg font-bold text-slate-100">${mod}</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-mono bg-slate-800 text-slate-300">${items.length} endpoints</span>
+              </div>
+              <div class="text-xs text-slate-400">
+                Live: <strong class="text-emerald-400">${liveCount}</strong> / ${items.length}
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${items.map(item => renderCardHtml(item)).join('')}
             </div>
           </div>
         `;
       }).join('');
     }
 
+    // Slide-out Drawer logic
     function openDrawer(id) {
       const item = SYNC_DATA.find(d => d.id === id);
       if (!item) return;
@@ -711,7 +1061,7 @@
       currentTab = tab;
       const tabs = ['stack', 'drizzle', 'files', 'test'];
       tabs.forEach(t => {
-        const btn = document.getElementById(`tabBtn-${t}`);
+        const btn = document.getElementById('tabBtn-' + t);
         if (t === tab) {
           btn.className = 'pb-3 border-b-2 border-emerald-400 text-emerald-400 transition font-bold';
         } else {
@@ -729,11 +1079,11 @@
 
       const details = item.details || {
         libraries: [
-          { name: 'Express 5', purpose: 'Planned REST endpoint route' },
-          { name: 'Drizzle ORM', purpose: 'Schema query against Neon PostgreSQL' },
-          { name: 'Zod', purpose: 'Input validation schema' }
+          { name: 'Express 5.1.0', purpose: 'Standard REST endpoint routing & controller' },
+          { name: 'Drizzle ORM 0.44', purpose: 'Type-safe SQL queries against Neon PostgreSQL' },
+          { name: 'Zod 3.24', purpose: 'Request parameter & body validation schema' }
         ],
-        database: `Maps to "${item.table}" table in Neon PostgreSQL. Currently handled in frontend by MSW mock.`,
+        database: `Maps to "${item.table}" table in Neon PostgreSQL. Simulated on the client with Mock Service Worker.`,
         codeSnippet: `// Scheduled for live implementation in backend\n// Endpoint: ${item.method} ${item.path}`,
         files: [
           { role: 'Frontend Caller', path: `TES-Hub-main/src/pages/${item.caller}` },
@@ -745,10 +1095,10 @@
       if (currentTab === 'stack') {
         container.innerHTML = `
           <div>
-            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">🛠️ Exact Tech Stack & Libraries Used</h3>
-            <div class="grid gap-3">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">🛠️ Connected Libraries & Modules</h3>
+            <div class="grid gap-2.5">
               ${details.libraries.map(lib => `
-                <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex items-start gap-3">
+                <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 flex items-start gap-3">
                   <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm shrink-0">
                     📦
                   </div>
@@ -762,8 +1112,8 @@
           </div>
 
           <div class="pt-4 border-t border-slate-800">
-            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">⚡ Implementation Technique</h3>
-            <p class="text-xs text-slate-300 leading-relaxed bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+            <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">⚡ Implementation Architecture</h3>
+            <p class="text-xs text-slate-300 leading-relaxed bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
               ${item.status === 'LIVE' ? '✅ This endpoint is running live in Express 5 with pure TypeScript ESM, connected directly to Neon PostgreSQL cloud database with Zod body/param guards.' : '⏳ This endpoint is currently simulated in the browser with MSW (Mock Service Worker). Ready for Drizzle backend implementation.'}
             </p>
           </div>
@@ -773,19 +1123,19 @@
           <div>
             <div class="flex items-center justify-between mb-2">
               <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider">🐘 Database Operation & Drizzle Code</h3>
-              <button onclick="copyToClipboard('drizzleCode')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
+              <button onclick="copyText(document.getElementById('drizzleCode').innerText, 'Drizzle code copied!')" class="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
                 <span>📋</span> Copy Code
               </button>
             </div>
-            <pre id="drizzleCode" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed select-all">${details.codeSnippet}</pre>
+            <pre id="drizzleCode" class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto leading-relaxed select-all">${details.codeSnippet}</pre>
           </div>
 
           <div class="pt-4 border-t border-slate-800">
             <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📊 Database Schema & Constraints</h3>
-            <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
               <div>Table: <strong class="text-purple-400 font-mono">${item.table}</strong></div>
               <div>Database: <strong class="text-slate-200">Neon PostgreSQL Cloud Instance</strong></div>
-              <div class="text-slate-400 text-[11px]">${details.database}</div>
+              <div class="text-slate-400 text-[11px] leading-relaxed">${details.database}</div>
             </div>
           </div>
         `;
@@ -795,12 +1145,14 @@
             <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-3">📁 Connected Source Files</h3>
             <div class="space-y-2.5">
               ${details.files.map(f => `
-                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-                  <div>
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
                     <span class="text-[10px] uppercase font-bold text-slate-500 block">${f.role}</span>
-                    <span class="font-mono text-xs text-slate-200">${f.path}</span>
+                    <span class="font-mono text-xs text-slate-200 truncate block select-all">${f.path}</span>
                   </div>
-                  <span class="text-xs text-emerald-400 font-semibold px-2 py-1 bg-emerald-500/10 rounded">Source</span>
+                  <button onclick="copyText('${f.path}', 'File path copied!')" class="text-xs text-emerald-400 font-semibold px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 rounded transition shrink-0">
+                    Copy Path
+                  </button>
                 </div>
               `).join('')}
             </div>
@@ -809,11 +1161,11 @@
           <div class="pt-4 border-t border-slate-800">
             <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">🔄 Layer Separation Pattern</h3>
             <div class="grid grid-cols-2 gap-2 text-xs">
-              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+              <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
                 <span class="text-[10px] text-emerald-400 font-bold block mb-0.5">Controller Layer</span>
                 <span class="text-slate-300 text-[11px]">Async handler, try/catch, HTTP status codes</span>
               </div>
-              <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+              <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
                 <span class="text-[10px] text-sky-400 font-bold block mb-0.5">Validation Layer</span>
                 <span class="text-slate-300 text-[11px]">Zod schema middleware (validateBody/Params)</span>
               </div>
@@ -822,47 +1174,158 @@
         `;
       } else if (currentTab === 'test') {
         container.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider">🧪 Live cURL / CLI Test Command</h3>
-              <button onclick="copyToClipboard('curlCmd')" class="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1">
-                <span>📋</span> Copy Command
+          <!-- Live Interactive Tester -->
+          <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase font-bold text-emerald-400 tracking-wider">⚡ Live Browser API Tester</span>
+              <span class="text-[10px] text-slate-400 font-mono">Target: http://localhost:3000</span>
+            </div>
+            
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-1 rounded-md text-xs font-mono font-bold method-${item.method}">${item.method}</span>
+              <input type="text" id="liveTestUrl" value="http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200">
+              <button onclick="executeLiveTest()" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition">
+                Send Request
               </button>
             </div>
-            <pre id="curlCmd" class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-sky-300 overflow-x-auto select-all">${details.curl}</pre>
+
+            <div id="liveTestResult" class="hidden pt-2 border-t border-slate-800">
+              <div class="flex items-center justify-between text-[11px] mb-1">
+                <span>Result: <strong id="liveStatus" class="font-mono text-emerald-400">200 OK</strong></span>
+                <span id="liveDuration" class="text-slate-400 font-mono">12ms</span>
+              </div>
+              <pre id="liveResponseBody" class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono text-slate-300 max-h-48 overflow-y-auto"></pre>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider">🧪 cURL CLI Command</h3>
+              <button onclick="copyText('${details.curl}', 'cURL command copied!')" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+                <span>📋</span> Copy cURL
+              </button>
+            </div>
+            <pre class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-sky-300 overflow-x-auto select-all">${details.curl}</pre>
           </div>
 
           ${details.requestSample ? `
-            <div class="pt-4 border-t border-slate-800">
+            <div class="pt-2">
               <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📤 Request Payload (JSON)</h3>
-              <pre class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 overflow-x-auto">${JSON.stringify(details.requestSample, null, 2)}</pre>
+              <pre class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 overflow-x-auto">${JSON.stringify(details.requestSample, null, 2)}</pre>
             </div>
           ` : ''}
 
           ${details.responseSample ? `
-            <div class="pt-4 border-t border-slate-800">
+            <div class="pt-2">
               <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">📥 Response Sample (JSON)</h3>
-              <pre class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 overflow-x-auto">${JSON.stringify(details.responseSample, null, 2)}</pre>
+              <pre class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 overflow-x-auto">${JSON.stringify(details.responseSample, null, 2)}</pre>
             </div>
           ` : ''}
         `;
       }
     }
 
-    function copyToClipboard(elementId) {
-      const text = document.getElementById(elementId).innerText;
+    async function executeLiveTest() {
+      const url = document.getElementById('liveTestUrl').value;
+      const resultBox = document.getElementById('liveTestResult');
+      const statusEl = document.getElementById('liveStatus');
+      const durationEl = document.getElementById('liveDuration');
+      const bodyEl = document.getElementById('liveResponseBody');
+
+      resultBox.classList.remove('hidden');
+      statusEl.innerText = 'Sending...';
+      durationEl.innerText = '';
+      bodyEl.innerText = 'Connecting to backend...';
+
+      const startTime = performance.now();
+      try {
+        const item = currentDrawerItem;
+        const options = {
+          method: item.method,
+          headers: { 'Content-Type': 'application/json' }
+        };
+        if (item.method !== 'GET' && item.details && item.details.requestSample) {
+          options.body = JSON.stringify(item.details.requestSample);
+        }
+
+        const res = await fetch(url, options);
+        const duration = Math.round(performance.now() - startTime);
+        const data = await res.json().catch(() => ({ statusText: res.statusText }));
+
+        statusEl.innerText = res.status + ' ' + res.statusText;
+        statusEl.className = res.ok ? 'font-mono text-emerald-400' : 'font-mono text-rose-400';
+        durationEl.innerText = duration + 'ms';
+        bodyEl.innerText = JSON.stringify(data, null, 2);
+        showToast('Live test completed with ' + res.status, res.ok ? 'success' : 'warning');
+      } catch (err) {
+        const duration = Math.round(performance.now() - startTime);
+        statusEl.innerText = 'Connection Failed';
+        statusEl.className = 'font-mono text-rose-400';
+        durationEl.innerText = duration + 'ms';
+        bodyEl.innerText = 'Unable to reach backend at ' + url + '. Is your Express 5 server running on port 3000?\nError: ' + err.message;
+        showToast('Backend offline or port 3000 unreachable', 'error');
+      }
+    }
+
+    function copyCurrentCurl() {
+      if (!currentDrawerItem) return;
+      const details = currentDrawerItem.details;
+      const curl = details && details.curl ? details.curl : 'curl http://localhost:3000' + currentDrawerItem.path;
+      copyText(curl, 'cURL command copied to clipboard!');
+    }
+
+    function copyItemCurl(id) {
+      const item = SYNC_DATA.find(d => d.id === id);
+      if (!item) return;
+      const curl = item.details && item.details.curl ? item.details.curl : 'curl http://localhost:3000' + item.path;
+      copyText(curl, 'cURL copied: ' + item.path);
+    }
+
+    // Modern Toast System
+    function showToast(msg, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const colors = {
+        success: 'bg-slate-900 border-emerald-500/40 text-emerald-300',
+        warning: 'bg-slate-900 border-amber-500/40 text-amber-300',
+        error: 'bg-slate-900 border-rose-500/40 text-rose-300'
+      };
+
+      toast.className = 'toast-item flex items-center gap-2 px-4 py-2.5 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-semibold ' + (colors[type] || colors.success);
+      toast.innerHTML = '<span>✦</span><span>' + msg + '</span>';
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px) scale(0.95)';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    function copyText(text, successMsg = 'Copied to clipboard!') {
       navigator.clipboard.writeText(text).then(() => {
-        alert('Copied to clipboard!');
+        showToast(successMsg, 'success');
+      }).catch(() => {
+        showToast('Failed to copy', 'error');
       });
     }
 
-    // Close on Escape Key
+    // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeDrawer();
+      if ((e.key === '/' || (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) && document.activeElement !== document.getElementById('searchInput')) {
+        e.preventDefault();
+        const input = document.getElementById('searchInput');
+        input.focus();
+        input.select();
+      }
     });
 
+    // Initial load
     calculateScorecard();
-    renderCards();
+    renderView();
   </script>
 </body>
 </html>
