@@ -24,34 +24,33 @@
     *, *::before, *::after { box-sizing: border-box; }
 
     /* ══════════════════════════════════════════════════════════════
-       BALANCED SLATE THEME (High Border Contrast & Visual Hierarchy)
-       Page: #0c1017 (Dark slate ground, no glare, no pitch-black void)
-       Cards: #151c28 (Distinctly elevated surface)
-       Borders: #33435c (1.5px crisp, high-contrast, unmistakable)
-       Path block: #080d15 (Terminal sunken block with #28374d border)
+       THE PERFECT MIDDLE GROUND (Eye Comfort Slate / Dimmed Mode)
+       Background: #1f2530 (Soft mid-charcoal / slate, 0% glare, not black)
+       Card Surface: #28303f (Clearly defined elevated surface)
+       Borders: #4a566e (CRISP 1.5px/2px borders with high legibility)
+       Sunken boxes: #181d27 (Deep recessed terminal panels)
        ══════════════════════════════════════════════════════════════ */
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
-      background: #0c1017;
-      color: #e2e8f0;
+      background: #1f2530;
+      color: #cbd5e1;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Main Cards: High-Contrast Defined Borders ── */
+    /* ── Main Cards: Noticeable, Crisp 2px Borders ── */
     .card {
-      background: #151c28;
-      border: 1.5px solid #33435c;
+      background: #28303f;
+      border: 1.5px solid #4a566e;
       border-radius: 12px;
-      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.2);
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
     }
     .card:hover {
       border-color: #60a5fa;
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(96, 165, 250, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(96, 165, 250, 0.4);
     }
 
     /* Left structural anchor line (gives immediate boundary recognition) */
@@ -59,116 +58,115 @@
       border-left: 4px solid #10b981 !important;
     }
     .card-mock {
-      border-left: 4px solid #475569 !important;
+      border-left: 4px solid #64748b !important;
     }
 
-    /* ── Inset Metadata Boxes ── */
+    /* ── Inset Metadata Boxes: Recessed with distinct border ── */
     .inset {
-      background: #0f1520;
-      border: 1px solid #243247;
+      background: #191f2a;
+      border: 1px solid #3d485e;
       border-radius: 8px;
     }
 
-    /* ── Section Panels (Pipeline, Scorecard, Drawer) ── */
+    /* ── Section Panels ── */
     .section-panel {
-      background: #151c28;
-      border: 1.5px solid #33435c;
+      background: #28303f;
+      border: 1.5px solid #4a566e;
       border-radius: 14px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
 
-    /* ── API Path Block: Crystal-Clear Code Window ── */
+    /* ── API Path Block: Terminal Window ── */
     .path-block {
-      background: #080d15;
+      background: #151a23;
       color: #38bdf8;
-      border: 1.5px solid #28374d;
+      border: 1.5px solid #3d495f;
       border-radius: 8px;
       font-family: 'JetBrains Mono', monospace;
-      letter-spacing: -0.01em;
     }
 
     /* ── HTTP Method Badges: Solid, High-Legibility, Crisp Borders ── */
-    .m-GET    { background: #172554; color: #93c5fd; border: 1.5px solid #2563eb; font-weight: 700; }
-    .m-POST   { background: #064e3b; color: #6ee7b7; border: 1.5px solid #059669; font-weight: 700; }
-    .m-PATCH  { background: #451a03; color: #fcd34d; border: 1.5px solid #d97706; font-weight: 700; }
-    .m-PUT    { background: #3b0764; color: #d8b4fe; border: 1.5px solid #7c3aed; font-weight: 700; }
-    .m-DELETE { background: #4c0519; color: #fda4af; border: 1.5px solid #e11d48; font-weight: 700; }
+    .m-GET    { background: #1e3a5f; color: #93c5fd; border: 1.5px solid #3b82f6; font-weight: 700; }
+    .m-POST   { background: #14532d; color: #86efac; border: 1.5px solid #22c55e; font-weight: 700; }
+    .m-PATCH  { background: #78350f; color: #fde047; border: 1.5px solid #eab308; font-weight: 700; }
+    .m-PUT    { background: #4c1d95; color: #d8b4fe; border: 1.5px solid #a855f7; font-weight: 700; }
+    .m-DELETE { background: #7f1d1d; color: #fca5a5; border: 1.5px solid #ef4444; font-weight: 700; }
 
     /* ── Status Indicators ── */
     .st-live {
-      background: #064e3b;
-      color: #6ee7b7;
-      border: 1.5px solid #10b981;
+      background: #14532d;
+      color: #86efac;
+      border: 1.5px solid #22c55e;
       font-weight: 600;
     }
     .st-mock {
-      background: #1e293b;
+      background: #1e2634;
       color: #94a3b8;
-      border: 1.5px solid #475569;
+      border: 1.5px solid #4a566e;
       font-weight: 600;
     }
 
     /* ── Filter Pills & Controls ── */
     .pill {
-      border: 1.5px solid #33435c;
-      background: #111722;
-      color: #94a3b8;
+      border: 1.5px solid #4a566e;
+      background: #1e2634;
+      color: #cbd5e1;
       transition: all 0.15s ease;
     }
     .pill:hover {
       border-color: #60a5fa;
-      color: #f1f5f9;
-      background: #162030;
+      color: #ffffff;
+      background: #252f40;
     }
     .pill.on {
-      background: #1e3a5f;
-      color: #93c5fd;
-      border-color: #3b82f6;
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #60a5fa;
       font-weight: 700;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
     }
 
     .mod-pill {
-      border: 1.5px solid #33435c;
-      background: #111722;
-      color: #94a3b8;
+      border: 1.5px solid #4a566e;
+      background: #1e2634;
+      color: #cbd5e1;
       transition: all 0.15s ease;
     }
     .mod-pill:hover {
       border-color: #10b981;
-      color: #f1f5f9;
-      background: #162030;
+      color: #ffffff;
+      background: #252f40;
     }
     .mod-pill.on {
-      background: #064e3b;
-      color: #6ee7b7;
-      border-color: #10b981;
+      background: #059669;
+      color: #ffffff;
+      border-color: #34d399;
       font-weight: 700;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     }
 
     /* ── Search Input ── */
     .search-input {
-      background: #0f1520;
-      border: 1.5px solid #33435c;
-      color: #f1f5f9;
+      background: #181d27;
+      border: 1.5px solid #4a566e;
+      color: #f8fafc;
     }
-    .search-input::placeholder { color: #64748b; }
+    .search-input::placeholder { color: #818cf8; opacity: 0.6; }
     .search-input:focus {
-      border-color: #3b82f6;
+      border-color: #60a5fa;
       outline: none;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-      background: #141c2b;
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+      background: #1c222e;
     }
 
     /* ── Select Dropdown ── */
     .ctrl-select {
-      background: #0f1520;
-      border: 1.5px solid #33435c;
-      color: #e2e8f0;
+      background: #181d27;
+      border: 1.5px solid #4a566e;
+      color: #f1f5f9;
     }
     .ctrl-select:focus {
-      border-color: #3b82f6;
+      border-color: #60a5fa;
       outline: none;
     }
 
@@ -176,8 +174,8 @@
     #drawerBackdrop { transition: opacity 0.25s ease; }
     #drawerPanel {
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      background: #151c28;
-      border-left: 2px solid #33435c;
+      background: #28303f;
+      border-left: 2px solid #4a566e;
     }
     .drawer-open #drawerBackdrop { opacity: 1; pointer-events: auto; }
     .drawer-open #drawerPanel { transform: translateX(0); }
@@ -186,26 +184,26 @@
 
     .tab-btn {
       border-bottom: 2px solid transparent;
-      color: #64748b;
+      color: #94a3b8;
       font-weight: 600;
       transition: all 0.15s ease;
     }
-    .tab-btn:hover { color: #cbd5e1; }
+    .tab-btn:hover { color: #f1f5f9; }
     .tab-btn.on {
       border-bottom-color: #10b981;
-      color: #f1f5f9;
+      color: #ffffff;
     }
 
     /* ── Progress Track & Fill ── */
     .progress-track {
-      background: #0c1017;
+      background: #151a23;
       height: 8px;
       border-radius: 9999px;
       overflow: hidden;
-      border: 1.5px solid #33435c;
+      border: 1.5px solid #4a566e;
     }
     .progress-fill {
-      background: linear-gradient(90deg, #059669, #10b981);
+      background: linear-gradient(90deg, #059669, #34d399);
       height: 100%;
       border-radius: 9999px;
       transition: width 0.5s ease;
@@ -225,10 +223,10 @@
     .toast {
       pointer-events: auto;
       animation: tIn 0.2s ease;
-      background: #151c28;
-      border: 1.5px solid #33435c;
-      color: #f1f5f9;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      background: #28303f;
+      border: 1.5px solid #4a566e;
+      color: #f8fafc;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
     @keyframes tIn {
       from { transform: translateY(10px); opacity: 0; }
@@ -237,33 +235,33 @@
 
     /* ── Custom Scrollbar ── */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #0c1017; }
-    ::-webkit-scrollbar-thumb { background: #33435c; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    ::-webkit-scrollbar-track { background: #191f2a; }
+    ::-webkit-scrollbar-thumb { background: #4a566e; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
     /* ── Table Styling ── */
     .tbl-head {
-      background: #0f1520;
-      border-bottom: 2px solid #33435c;
+      background: #181d27;
+      border-bottom: 2px solid #4a566e;
     }
     .tbl-row {
-      border-bottom: 1.5px solid #243247;
+      border-bottom: 1.5px solid #384357;
       transition: background 0.15s ease;
     }
     .tbl-row:hover {
-      background: #1e293b;
+      background: #313b4d;
     }
   </style>
 </head>
 <body class="drawer-closed">
 
-  <!-- Crisp top accent stripe -->
-  <div class="h-[3px] w-full fixed top-0 left-0 z-30" style="background: linear-gradient(90deg, #2563eb, #10b981, #06b6d4);"></div>
+  <!-- Top accent stripe -->
+  <div class="h-[3px] w-full fixed top-0 left-0 z-30" style="background: linear-gradient(90deg, #3b82f6, #10b981, #06b6d4);"></div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
 
     <!-- ══════════ HEADER ══════════ -->
-    <header class="mb-8 pb-8 border-b" style="border-color: #33435c;">
+    <header class="mb-8 pb-8 border-b" style="border-color: #4a566e;">
       <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
         <div class="space-y-2 max-w-xl">
           <div class="flex items-center gap-2">
@@ -271,36 +269,36 @@
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               Live Architecture Inspector
             </span>
-            <span class="text-xs font-mono font-medium" style="color: #64748b;">v1.4 · Balanced Edition</span>
+            <span class="text-xs font-mono font-medium" style="color: #94a3b8;">v1.5 · Eye-Comfort Dimmed</span>
           </div>
           <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight text-white">
             TES-Hub API &amp; Schema <br class="hidden sm:inline"/>Specification
           </h1>
-          <p class="text-sm leading-relaxed" style="color: #94a3b8;">
-            Full-stack trace mapping 67 endpoints from <strong class="text-slate-200">React 19</strong> client hooks through <strong class="text-slate-200">Express 5</strong> gateway to <strong class="text-slate-200">Neon PostgreSQL</strong> via Drizzle ORM.
+          <p class="text-sm leading-relaxed" style="color: #cbd5e1;">
+            Full-stack trace mapping 67 endpoints from <strong class="text-white">React 19</strong> client hooks through <strong class="text-white">Express 5</strong> gateway to <strong class="text-white">Neon PostgreSQL</strong> via Drizzle ORM.
           </p>
         </div>
 
         <!-- Scorecard -->
         <div class="section-panel p-5 min-w-[320px] space-y-3">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-slate-400">Backend Implementation</span>
+            <span class="font-semibold text-slate-300">Backend Implementation</span>
             <span id="progressText" class="font-mono font-bold text-emerald-400">12.5%</span>
           </div>
           <div class="progress-track">
             <div id="progressBar" class="progress-fill" style="width: 12.5%;"></div>
           </div>
-          <div class="grid grid-cols-3 gap-3 pt-3 text-center text-xs" style="border-top: 1.5px solid #243247;">
+          <div class="grid grid-cols-3 gap-3 pt-3 text-center text-xs" style="border-top: 1.5px solid #384357;">
             <div>
-              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-500">Live</div>
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-400">Live</div>
               <div id="liveCount" class="font-mono text-2xl font-extrabold text-emerald-400">6</div>
             </div>
-            <div style="border-left: 1.5px solid #243247; border-right: 1.5px solid #243247;">
-              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-500">Mocked</div>
-              <div id="mockCount" class="font-mono text-2xl font-extrabold text-slate-400">42</div>
+            <div style="border-left: 1.5px solid #384357; border-right: 1.5px solid #384357;">
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-400">Mocked</div>
+              <div id="mockCount" class="font-mono text-2xl font-extrabold text-slate-300">42</div>
             </div>
             <div>
-              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-500">Total</div>
+              <div class="text-[10px] uppercase font-bold tracking-wider mb-1 text-slate-400">Total</div>
               <div id="totalCount" class="font-mono text-2xl font-extrabold text-white">48</div>
             </div>
           </div>
@@ -317,24 +315,24 @@
     <!-- ══════════ PIPELINE SCHEMATIC ══════════ -->
     <section class="section-panel p-5 md:p-6 mb-8">
       <div class="flex items-center justify-between mb-4 text-xs">
-        <span class="uppercase tracking-widest font-bold text-slate-400 text-[11px]">Full-Stack Request Pipeline</span>
-        <span class="font-mono text-slate-400 text-[11px] font-semibold">:5173 Client → :3000 API Gateway → Neon PostgreSQL</span>
+        <span class="uppercase tracking-widest font-bold text-slate-300 text-[11px]">Full-Stack Request Pipeline</span>
+        <span class="font-mono text-slate-300 text-[11px] font-semibold">:5173 Client → :3000 API Gateway → Neon PostgreSQL</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="inset p-4" style="border-top: 3px solid #3b82f6;">
           <div class="text-[10px] font-mono uppercase tracking-widest font-bold text-blue-400 mb-1">01 · Client</div>
           <div class="text-sm font-bold text-white">React 19 + Zustand + Axios</div>
-          <p class="text-xs mt-1 leading-relaxed text-slate-400">TypeScript SPA on Vite (:5173). MSW intercept for unmocked endpoints. Shadcn UI + i18n.</p>
+          <p class="text-xs mt-1 leading-relaxed text-slate-300">TypeScript SPA on Vite (:5173). MSW intercept for unmocked endpoints. Shadcn UI + i18n.</p>
         </div>
         <div class="inset p-4" style="border-top: 3px solid #10b981;">
           <div class="text-[10px] font-mono uppercase tracking-widest font-bold text-emerald-400 mb-1">02 · Gateway</div>
           <div class="text-sm font-bold text-white">Express 5 + Zod + Jose JWT</div>
-          <p class="text-xs mt-1 leading-relaxed text-slate-400">Bcrypt 12-round hashing, token middleware, Helmet headers, typed error handler.</p>
+          <p class="text-xs mt-1 leading-relaxed text-slate-300">Bcrypt 12-round hashing, token middleware, Helmet headers, typed error handler.</p>
         </div>
         <div class="inset p-4" style="border-top: 3px solid #f59e0b;">
           <div class="text-[10px] font-mono uppercase tracking-widest font-bold text-amber-400 mb-1">03 · Database</div>
           <div class="text-sm font-bold text-white">Drizzle ORM + Neon PostgreSQL</div>
-          <p class="text-xs mt-1 leading-relaxed text-slate-400">Serverless pool, @epic-web/remember cache. Users, settings, resources, sessions schemas.</p>
+          <p class="text-xs mt-1 leading-relaxed text-slate-300">Serverless pool, @epic-web/remember cache. Users, settings, resources, sessions schemas.</p>
         </div>
       </div>
     </section>
@@ -344,7 +342,7 @@
       <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
         <!-- Search -->
         <div class="relative flex-1 max-w-lg">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
           <input type="text" id="searchInput" placeholder="Search route, caller, table, domain… (press / to focus)" class="search-input w-full pl-9 pr-8 py-2.5 rounded-xl text-sm transition" oninput="renderView()">
@@ -353,14 +351,14 @@
 
         <div class="flex flex-wrap items-center gap-2">
           <!-- Status filter -->
-          <div class="inline-flex p-1 rounded-xl" style="background: #0f1520; border: 1.5px solid #33435c;">
+          <div class="inline-flex p-1 rounded-xl" style="background: #181d27; border: 1.5px solid #4a566e;">
             <button id="btnAll"  onclick="setStatus('ALL')"  class="pill on px-3 py-1.5 rounded-lg text-xs">All (<span id="chipAll">48</span>)</button>
             <button id="btnLive" onclick="setStatus('LIVE')" class="pill px-3 py-1.5 rounded-lg text-xs">● Live</button>
             <button id="btnMock" onclick="setStatus('MOCK')" class="pill px-3 py-1.5 rounded-lg text-xs">○ Mock</button>
           </div>
 
           <!-- View mode -->
-          <div class="inline-flex p-1 rounded-xl" style="background: #0f1520; border: 1.5px solid #33435c;">
+          <div class="inline-flex p-1 rounded-xl" style="background: #181d27; border: 1.5px solid #4a566e;">
             <button id="vGrid"  onclick="setView('grid')"  class="pill on p-1.5 rounded-lg" title="Card Grid">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
             </button>
@@ -404,43 +402,43 @@
     <main id="view" class="mb-16"></main>
 
     <!-- Footer -->
-    <footer class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs gap-2" style="border-top: 1.5px solid #33435c; color: #64748b;">
-      <span><strong class="text-slate-300">SDLC-PHARM</strong> · TES-Hub Infrastructure Spec</span>
+    <footer class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs gap-2" style="border-top: 1.5px solid #4a566e; color: #94a3b8;">
+      <span><strong class="text-white">SDLC-PHARM</strong> · TES-Hub Infrastructure Spec</span>
       <span class="font-mono">Neon PostgreSQL · Express 5 · Drizzle ORM</span>
     </footer>
   </div>
 
   <!-- ══════════ DRAWER ══════════ -->
-  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 z-40" style="background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(2px);"></div>
+  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 z-40" style="background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px);"></div>
   <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full shadow-2xl z-50 flex flex-col overflow-hidden">
-    <div class="p-6 flex items-start justify-between gap-4" style="background: #0f1520; border-bottom: 2px solid #33435c;">
+    <div class="p-6 flex items-start justify-between gap-4" style="background: #191f2a; border-bottom: 2px solid #4a566e;">
       <div>
         <div class="flex items-center gap-2 mb-2">
           <span id="dMethod" class="px-2.5 py-0.5 rounded text-xs font-mono m-POST">POST</span>
           <span id="dStatus" class="px-2.5 py-0.5 rounded-full text-[11px] st-live">● Live</span>
-          <span id="dId" class="text-xs font-mono text-slate-500">#1</span>
+          <span id="dId" class="text-xs font-mono text-slate-400">#1</span>
         </div>
-        <h2 id="dPath" class="text-lg font-mono font-bold select-all text-sky-400">/api/auth/signup</h2>
-        <p id="dDesc" class="text-xs mt-1 leading-relaxed text-slate-400">Description</p>
+        <h2 id="dPath" class="text-lg font-mono font-bold select-all text-sky-300">/api/auth/signup</h2>
+        <p id="dDesc" class="text-xs mt-1 leading-relaxed text-slate-300">Description</p>
       </div>
-      <button onclick="closeDrawer()" class="p-2 rounded-lg transition" style="color: #94a3b8; border: 1.5px solid #33435c; background: #151c28;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#33435c';this.style.color='#94a3b8';">
+      <button onclick="closeDrawer()" class="p-2 rounded-lg transition" style="color: #cbd5e1; border: 1.5px solid #4a566e; background: #28303f;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#4a566e';this.style.color='#cbd5e1';">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <div class="flex px-6 pt-3 gap-5 text-xs overflow-x-auto" style="background: #151c28; border-bottom: 1.5px solid #243247;">
+    <div class="flex px-6 pt-3 gap-5 text-xs overflow-x-auto" style="background: #28303f; border-bottom: 1.5px solid #384357;">
       <button onclick="setTab('stack')"   id="t-stack"   class="tab-btn on pb-3">Stack &amp; Libs</button>
       <button onclick="setTab('drizzle')" id="t-drizzle" class="tab-btn pb-3">Drizzle Schema</button>
       <button onclick="setTab('files')"   id="t-files"   class="tab-btn pb-3">File Map</button>
       <button onclick="setTab('test')"    id="t-test"    class="tab-btn pb-3">Test Console</button>
     </div>
 
-    <div id="dBody" class="flex-1 overflow-y-auto p-6 space-y-5" style="background: #111722;"></div>
+    <div id="dBody" class="flex-1 overflow-y-auto p-6 space-y-5" style="background: #202735;"></div>
 
-    <div class="p-4 flex items-center justify-between text-xs" style="background: #0f1520; border-top: 1.5px solid #33435c; color: #64748b;">
-      <span class="font-mono text-slate-400">localhost:3000</span>
+    <div class="p-4 flex items-center justify-between text-xs" style="background: #191f2a; border-top: 1.5px solid #4a566e; color: #94a3b8;">
+      <span class="font-mono text-slate-300">localhost:3000</span>
       <div class="flex items-center gap-2">
-        <button onclick="copyCurl()" class="px-3 py-1.5 rounded-lg font-medium transition" style="border: 1.5px solid #33435c; background: #151c28; color: #cbd5e1;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#33435c';this.style.color='#cbd5e1';">Copy cURL</button>
+        <button onclick="copyCurl()" class="px-3 py-1.5 rounded-lg font-medium transition" style="border: 1.5px solid #4a566e; background: #28303f; color: #f1f5f9;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#4a566e';this.style.color='#f1f5f9';">Copy cURL</button>
         <button onclick="closeDrawer()" class="px-4 py-1.5 rounded-lg font-semibold transition" style="background: #059669; color: #ffffff;" onmouseover="this.style.background='#10b981';" onmouseout="this.style.background='#059669';">Done</button>
       </div>
     </div>
@@ -867,7 +865,7 @@
       const c = document.getElementById('view');
       const d = getData();
       if (!d.length) {
-        c.innerHTML = '<div class="section-panel text-center py-16"><div class="text-3xl mb-2 text-slate-500">∅</div><p class="text-sm font-bold text-white">No matching endpoints found</p><p class="text-xs mt-1 text-slate-400">Try adjusting your search terms or filters.</p><button onclick="clearSearch();setStatus(\'ALL\');setMod(\'ALL\');" class="mt-4 px-4 py-2 rounded-lg text-white text-xs font-bold" style="background: #2563eb;">Reset All Filters</button></div>';
+        c.innerHTML = '<div class="section-panel text-center py-16"><div class="text-3xl mb-2 text-slate-400">∅</div><p class="text-sm font-bold text-white">No matching endpoints found</p><p class="text-xs mt-1 text-slate-300">Try adjusting your search terms or filters.</p><button onclick="clearSearch();setStatus(\'ALL\');setMod(\'ALL\');" class="mt-4 px-4 py-2 rounded-lg text-white text-xs font-bold" style="background: #2563eb;">Reset All Filters</button></div>';
         return;
       }
       if (vMode === 'grid')  c.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' + d.map(cardHtml).join('') + '</div>';
@@ -884,32 +882,32 @@
               <span class="px-2.5 py-0.5 rounded text-[11px] font-mono m-${i.method}">${i.method}</span>
               <span class="px-2.5 py-0.5 rounded-full text-[10px] ${live ? 'st-live' : 'st-mock'}">${live ? '● Live Gateway' : '○ MSW Mock'}</span>
             </div>
-            <span class="text-[11px] font-mono text-slate-500 font-semibold">#${i.id}</span>
+            <span class="text-[11px] font-mono text-slate-400 font-semibold">#${i.id}</span>
           </div>
 
           <!-- Highlighted Path Box with crisp border -->
           <div class="path-block px-3.5 py-2.5 text-xs mb-3.5 select-all flex items-center justify-between">
             <span class="truncate font-semibold">${i.path}</span>
-            <span class="text-[10px] text-slate-500 ml-2 shrink-0 font-mono">:${live ? '3000' : '5173'}</span>
+            <span class="text-[10px] text-slate-400 ml-2 shrink-0 font-mono">:${live ? '3000' : '5173'}</span>
           </div>
 
           <div class="grid grid-cols-2 gap-2 text-xs mb-3">
             <div class="inset p-2.5">
-              <div class="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-slate-500">Frontend Caller</div>
-              <div class="font-semibold truncate text-slate-200">${i.caller}</div>
-              <div class="text-[10px] font-mono truncate text-slate-500 mt-0.5">${i.hook}</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-slate-400">Frontend Caller</div>
+              <div class="font-semibold truncate text-white">${i.caller}</div>
+              <div class="text-[10px] font-mono truncate text-slate-400 mt-0.5">${i.hook}</div>
             </div>
             <div class="inset p-2.5">
-              <div class="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-slate-500">PostgreSQL Table</div>
-              <div class="font-mono font-semibold truncate text-slate-200">${i.table}</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Drizzle ORM</div>
+              <div class="text-[10px] font-bold uppercase tracking-wider mb-0.5 text-slate-400">PostgreSQL Table</div>
+              <div class="font-mono font-semibold truncate text-white">${i.table}</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Drizzle ORM</div>
             </div>
           </div>
 
-          <p class="text-xs leading-relaxed text-slate-400 line-clamp-2 mb-3">${i.desc}</p>
+          <p class="text-xs leading-relaxed text-slate-300 line-clamp-2 mb-3">${i.desc}</p>
 
-          <div class="pt-3 flex items-center justify-between text-[11px]" style="border-top: 1.5px solid #243247;">
-            <span class="font-mono font-bold capitalize text-slate-400">${i.mod}</span>
+          <div class="pt-3 flex items-center justify-between text-[11px]" style="border-top: 1.5px solid #384357;">
+            <span class="font-mono font-bold capitalize text-slate-300">${i.mod}</span>
             <span class="font-semibold text-emerald-400 flex items-center gap-1 group-hover:translate-x-0.5 transition">
               Inspect Blueprint →
             </span>
@@ -923,7 +921,7 @@
         <div class="section-panel overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-xs text-left">
-              <thead class="tbl-head text-[11px] uppercase tracking-wider font-bold text-slate-400">
+              <thead class="tbl-head text-[11px] uppercase tracking-wider font-bold text-slate-300">
                 <tr>
                   <th class="py-3.5 px-4">Method</th>
                   <th class="py-3.5 px-4">Endpoint Path</th>
@@ -939,11 +937,11 @@
                   const live = i.status === 'LIVE';
                   return `<tr class="tbl-row cursor-pointer" onclick="openDrawer(${i.id})">
                     <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-mono m-${i.method}">${i.method}</span></td>
-                    <td class="py-3 px-4 font-mono font-bold text-sky-400">${i.path}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-sky-300">${i.path}</td>
                     <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] ${live ? 'st-live' : 'st-mock'}">${live ? '● Live' : '○ Mock'}</span></td>
-                    <td class="py-3 px-4 truncate max-w-[150px] text-slate-300 font-medium">${i.caller}</td>
-                    <td class="py-3 px-4 font-mono truncate max-w-[140px] text-slate-300">${i.table}</td>
-                    <td class="py-3 px-4 capitalize font-semibold text-slate-400">${i.mod}</td>
+                    <td class="py-3 px-4 truncate max-w-[150px] text-white font-medium">${i.caller}</td>
+                    <td class="py-3 px-4 font-mono truncate max-w-[140px] text-slate-200">${i.table}</td>
+                    <td class="py-3 px-4 capitalize font-semibold text-slate-300">${i.mod}</td>
                     <td class="py-3 px-4 text-right font-bold text-emerald-400">View →</td>
                   </tr>`;
                 }).join('')}
@@ -962,12 +960,12 @@
         const lc = items.filter(i => i.status === 'LIVE').length;
         return `
           <div class="mb-10">
-            <div class="flex items-center justify-between mb-4 pb-2" style="border-bottom: 2px solid #33435c;">
+            <div class="flex items-center justify-between mb-4 pb-2" style="border-bottom: 2px solid #4a566e;">
               <div class="flex items-center gap-2">
                 <h3 class="capitalize text-base font-extrabold text-white">${mod}</h3>
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold" style="background: #1e293b; color: #94a3b8; border: 1.5px solid #33435c;">${items.length} endpoints</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold" style="background: #191f2a; color: #cbd5e1; border: 1.5px solid #4a566e;">${items.length} endpoints</span>
               </div>
-              <span class="text-xs font-semibold text-slate-400">Live Backend: <strong class="text-emerald-400 font-bold">${lc}</strong> / ${items.length}</span>
+              <span class="text-xs font-semibold text-slate-300">Live Backend: <strong class="text-emerald-400 font-bold">${lc}</strong> / ${items.length}</span>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${items.map(cardHtml).join('')}</div>
           </div>
@@ -1021,8 +1019,8 @@
         curl: 'curl http://localhost:3000' + item.path.replace(/:[a-zA-Z]+/g, 'sample-id')
       };
 
-      const insetStyle = 'style="background: #0f1520; border: 1.5px solid #243247; border-radius: 8px;"';
-      const headingStyle = 'style="color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;"';
+      const insetStyle = 'style="background: #181d27; border: 1.5px solid #384357; border-radius: 8px;"';
+      const headingStyle = 'style="color: #cbd5e1; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700;"';
 
       if (curTab === 'stack') {
         c.innerHTML = `
@@ -1034,13 +1032,13 @@
                   <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style="background: #10b981;"></div>
                   <div>
                     <div class="font-mono text-xs font-bold text-white">${l.name}</div>
-                    <div class="text-xs mt-0.5 text-slate-400">${l.purpose}</div>
+                    <div class="text-xs mt-0.5 text-slate-300">${l.purpose}</div>
                   </div>
                 </div>
               `).join('')}
             </div>
           </div>
-          <div style="padding-top: 16px; border-top: 1.5px solid #243247;">
+          <div style="padding-top: 16px; border-top: 1.5px solid #384357;">
             <h3 class="mb-2" ${headingStyle}>Implementation Status</h3>
             <div class="p-3.5 text-xs leading-relaxed" ${insetStyle} style="color: #cbd5e1;">
               ${item.status === 'LIVE' ? '✅ Running live in Express 5 ESM, connected to Neon PostgreSQL with Zod input validation.' : '⏳ Currently simulated with MSW on the frontend. Backend controller and Drizzle query ready for implementation.'}
@@ -1056,11 +1054,11 @@
             </div>
             <pre id="codeBlock" class="path-block p-4 text-xs overflow-x-auto leading-relaxed select-all">${det.codeSnippet}</pre>
           </div>
-          <div style="padding-top: 16px; border-top: 1.5px solid #243247;">
+          <div style="padding-top: 16px; border-top: 1.5px solid #384357;">
             <h3 class="mb-2" ${headingStyle}>Target Database Table</h3>
             <div class="p-3.5 text-xs space-y-1.5" ${insetStyle}>
-              <div class="text-slate-300">Table: <strong class="font-mono text-sky-400 text-sm">${item.table}</strong></div>
-              <div class="text-slate-300">Database Engine: <strong class="text-white">Neon Serverless PostgreSQL</strong></div>
+              <div class="text-slate-200">Table: <strong class="font-mono text-sky-300 text-sm">${item.table}</strong></div>
+              <div class="text-slate-200">Database Engine: <strong class="text-white">Neon Serverless PostgreSQL</strong></div>
               <div class="pt-1 text-[11px] leading-relaxed text-slate-400">${det.database}</div>
             </div>
           </div>
@@ -1073,10 +1071,10 @@
               ${det.files.map(f => `
                 <div class="p-3.5 flex items-center justify-between gap-3" ${insetStyle}>
                   <div class="min-w-0">
-                    <span class="block mb-0.5 text-[10px] uppercase font-bold text-slate-500">${f.role}</span>
-                    <span class="font-mono text-xs truncate block select-all text-sky-400">${f.path}</span>
+                    <span class="block mb-0.5 text-[10px] uppercase font-bold text-slate-400">${f.role}</span>
+                    <span class="font-mono text-xs truncate block select-all text-sky-300">${f.path}</span>
                   </div>
-                  <button onclick="cp('${f.path}','File path copied!')" class="text-xs font-semibold px-3 py-1 rounded shrink-0 transition" style="border: 1.5px solid #33435c; background: #151c28; color: #cbd5e1;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#33435c';this.style.color='#cbd5e1';">Copy</button>
+                  <button onclick="cp('${f.path}','File path copied!')" class="text-xs font-semibold px-3 py-1 rounded shrink-0 transition" style="border: 1.5px solid #4a566e; background: #28303f; color: #f1f5f9;" onmouseover="this.style.borderColor='#60a5fa';this.style.color='#ffffff';" onmouseout="this.style.borderColor='#4a566e';this.style.color='#f1f5f9';">Copy</button>
                 </div>
               `).join('')}
             </div>
@@ -1087,17 +1085,17 @@
           <div class="p-4 space-y-3" ${insetStyle}>
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-white">Live Request Console</span>
-              <span class="text-[10px] font-mono font-semibold text-slate-500">Target: localhost:3000</span>
+              <span class="text-[10px] font-mono font-semibold text-slate-400">Target: localhost:3000</span>
             </div>
             <div class="flex items-center gap-2">
               <span class="px-2.5 py-1 rounded text-xs font-mono m-${item.method}">${item.method}</span>
-              <input type="text" id="testUrl" value="http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-mono text-white" style="border: 1.5px solid #33435c; background: #0c1017;">
+              <input type="text" id="testUrl" value="http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}" class="flex-1 rounded-lg px-3 py-1.5 text-xs font-mono text-white" style="border: 1.5px solid #4a566e; background: #151a23;">
               <button onclick="runTest()" class="px-4 py-1.5 rounded-lg font-bold text-xs transition" style="background: #059669; color: #ffffff;" onmouseover="this.style.background='#10b981';" onmouseout="this.style.background='#059669';">Send</button>
             </div>
-            <div id="testResult" class="hidden pt-3" style="border-top: 1.5px solid #243247;">
+            <div id="testResult" class="hidden pt-3" style="border-top: 1.5px solid #384357;">
               <div class="flex items-center justify-between text-[11px] font-mono mb-1.5">
-                <span class="text-slate-400">Response: <strong id="testStatus" class="text-emerald-400">200 OK</strong></span>
-                <span id="testTime" class="text-slate-500">12ms</span>
+                <span class="text-slate-300">Response: <strong id="testStatus" class="text-emerald-400">200 OK</strong></span>
+                <span id="testTime" class="text-slate-400">12ms</span>
               </div>
               <pre id="testBody" class="path-block p-3 text-xs max-h-48 overflow-y-auto"></pre>
             </div>
