@@ -1,534 +1,348 @@
 <!DOCTYPE html>
-<html lang="en" class="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SDLC-PHARM • Architectural API & Schema Specification</title>
-  
-  <!-- Modern Typography: Plus Jakarta Sans (UI) + Newsreader (Editorial Serif) + JetBrains Mono (Code) -->
+  <title>SDLC-PHARM · API Architecture Inspector</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-            serif: ['"Newsreader"', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
             mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            ink: {
-              900: '#111215',
-              800: '#1c1d22',
-              700: '#2b2d34',
-              500: '#5c5f6a',
-              400: '#878a96',
-              300: '#bcbfc8',
-              100: '#eceef2',
-              50: '#f6f7f9',
-            },
-            botanical: {
-              950: '#0e2419',
-              900: '#143525',
-              800: '#1b4332',
-              700: '#2d6a4f',
-              600: '#40916c',
-              500: '#52b788',
-              100: '#e8f5ed',
-              50: '#f2f8f4',
-            },
-            parchment: {
-              50: '#fcfbf9',
-              100: '#f7f6f2',
-              200: '#edebe3',
-              300: '#e0ddd3',
-              400: '#c5c1b5',
-            }
           }
         }
       }
     }
   </script>
-
   <style>
-    /* CSS Variables for Light / Dark Luxe */
-    :root {
-      --bg-page: #f8f7f4;
-      --bg-card: #ffffff;
-      --bg-subtle: #f3f2ee;
-      --border-main: #e6e4dc;
-      --border-subtle: #eeece5;
-      --text-heading: #141518;
-      --text-body: #44474f;
-      --text-muted: #747781;
-      --shadow-sm: 0 1px 2px 0 rgba(20, 21, 24, 0.03);
-      --shadow-card: 0 1px 3px 0 rgba(20, 21, 24, 0.04), 0 4px 16px -2px rgba(20, 21, 24, 0.03);
-      --shadow-card-hover: 0 4px 6px -1px rgba(20, 21, 24, 0.05), 0 12px 24px -4px rgba(20, 21, 24, 0.06);
-    }
-
-    .dark {
-      --bg-page: #121316;
-      --bg-card: #18191d;
-      --bg-subtle: #202227;
-      --border-main: #2a2c33;
-      --border-subtle: #23252a;
-      --text-heading: #f3f3f6;
-      --text-body: #b8b9c2;
-      --text-muted: #7c7e8a;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 4px 16px -2px rgba(0, 0, 0, 0.25);
-      --shadow-card-hover: 0 6px 12px -2px rgba(0, 0, 0, 0.4), 0 16px 28px -6px rgba(0, 0, 0, 0.4);
-    }
+    *, *::before, *::after { box-sizing: border-box; }
 
     body {
-      background-color: var(--bg-page);
-      color: var(--text-body);
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #eef0f4;
+      color: #1a1d23;
       min-height: 100vh;
-      transition: background-color 0.25s ease, color 0.25s ease;
-      letter-spacing: -0.01em;
     }
 
-    /* Architectural hairline grid lines */
-    .arch-grid {
-      background-image: linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
-                        linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
-      background-size: 48px 48px;
+    /* ── Cards: white, lifted, clearly separated from gray page ── */
+    .card {
+      background: #ffffff;
+      border: 1px solid #dfe2e8;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
     }
-
-    /* Editorial card */
-    .luxe-card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-main);
-      box-shadow: var(--shadow-card);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .luxe-card:hover {
-      box-shadow: var(--shadow-card-hover);
-      border-color: #cbd5e1;
+    .card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.08), 0 12px 28px rgba(0,0,0,0.07);
+      border-color: #c5c9d2;
       transform: translateY(-2px);
     }
-    .dark .luxe-card:hover {
-      border-color: #475569;
+    .card-live {
+      border-left: 3px solid #16a34a;
     }
 
-    /* HTTP Method Badges - Understated Editorial Style */
-    .badge-GET {
-      background-color: #f0fdf4;
-      color: #166534;
+    /* ── Inset panels inside cards ── */
+    .inset {
+      background: #f5f6f8;
+      border: 1px solid #e5e7ec;
+      border-radius: 8px;
+    }
+
+    /* ── Section panels (triad, controls) ── */
+    .section-panel {
+      background: #ffffff;
+      border: 1px solid #dfe2e8;
+      border-radius: 14px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    /* ── HTTP Method Badges: solid, saturated, unmistakable ── */
+    .m-GET    { background: #dbeafe; color: #1e40af; font-weight: 700; }
+    .m-POST   { background: #d1fae5; color: #065f46; font-weight: 700; }
+    .m-PATCH  { background: #fef3c7; color: #92400e; font-weight: 700; }
+    .m-PUT    { background: #ede9fe; color: #5b21b6; font-weight: 700; }
+    .m-DELETE { background: #ffe4e6; color: #9f1239; font-weight: 700; }
+
+    /* ── Status indicators ── */
+    .st-live {
+      background: #dcfce7;
+      color: #15803d;
       border: 1px solid #bbf7d0;
+      font-weight: 600;
     }
-    .badge-POST {
-      background-color: #f0fdfa;
-      color: #115e59;
-      border: 1px solid #99f6e4;
-    }
-    .badge-PATCH {
-      background-color: #fffbeb;
-      color: #92400e;
-      border: 1px solid #fde68a;
-    }
-    .badge-PUT {
-      background-color: #faf5ff;
-      color: #6b21a8;
-      border: 1px solid #e9d5ff;
-    }
-    .badge-DELETE {
-      background-color: #fff1f2;
-      color: #9f1239;
-      border: 1px solid #fecdd3;
+    .st-mock {
+      background: #f3f4f6;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
+      font-weight: 500;
     }
 
-    .dark .badge-GET {
-      background-color: rgba(22, 101, 52, 0.2);
-      color: #86efac;
-      border-color: rgba(22, 101, 52, 0.4);
-    }
-    .dark .badge-POST {
-      background-color: rgba(17, 94, 89, 0.2);
-      color: #5eead4;
-      border-color: rgba(17, 94, 89, 0.4);
-    }
-    .dark .badge-PATCH {
-      background-color: rgba(146, 64, 14, 0.2);
-      color: #fcd34d;
-      border-color: rgba(146, 64, 14, 0.4);
-    }
-    .dark .badge-PUT {
-      background-color: rgba(107, 33, 168, 0.2);
-      color: #d8b4fe;
-      border-color: rgba(107, 33, 168, 0.4);
-    }
-    .dark .badge-DELETE {
-      background-color: rgba(159, 18, 57, 0.2);
-      color: #fda4af;
-      border-color: rgba(159, 18, 57, 0.4);
+    /* ── Endpoint path block: strong contrast ── */
+    .path-block {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Live vs Mocked badges */
-    .status-badge-live {
-      background-color: #edf7f0;
-      color: #1d5334;
-      border: 1px solid #cfead7;
+    /* ── Filter pills ── */
+    .pill {
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #6b7280;
+      transition: all 0.15s ease;
     }
-    .status-badge-mock {
-      background-color: var(--bg-subtle);
-      color: var(--text-muted);
-      border: 1px solid var(--border-main);
-    }
-    .dark .status-badge-live {
-      background-color: rgba(34, 197, 94, 0.12);
-      color: #4ade80;
-      border-color: rgba(34, 197, 94, 0.25);
+    .pill:hover { border-color: #9ca3af; color: #374151; }
+    .pill.on {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #1e293b;
+      font-weight: 600;
     }
 
-    /* Drawer Transition */
-    #drawerBackdrop {
-      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    .mod-pill {
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #6b7280;
+      transition: all 0.15s ease;
     }
-    #drawerPanel {
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    .mod-pill:hover { border-color: #9ca3af; color: #374151; }
+    .mod-pill.on {
+      background: #166534;
+      color: #ffffff;
+      border-color: #166534;
+      font-weight: 600;
     }
-    .drawer-open #drawerBackdrop { opacity: 1; pointer-events: auto; }
+
+    /* ── Drawer ── */
+    #drawerBackdrop { transition: opacity 0.25s ease; }
+    #drawerPanel { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+    .drawer-open #drawerBackdrop { opacity:1; pointer-events:auto; }
     .drawer-open #drawerPanel { transform: translateX(0); }
-    .drawer-closed #drawerBackdrop { opacity: 0; pointer-events: none; }
+    .drawer-closed #drawerBackdrop { opacity:0; pointer-events:none; }
     .drawer-closed #drawerPanel { transform: translateX(100%); }
 
-    /* Custom Toast Container */
-    #toastContainer {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .toast-item {
-      pointer-events: auto;
-      animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      transition: all 0.25s ease;
-    }
-    @keyframes toastSlideIn {
-      from { transform: translateY(12px) scale(0.97); opacity: 0; }
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
+    .tab-btn { border-bottom: 2px solid transparent; color: #6b7280; }
+    .tab-btn:hover { color: #1e293b; }
+    .tab-btn.on { border-bottom-color: #166534; color: #1e293b; font-weight: 600; }
 
-    /* Refined Scrollbars */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* ── Toasts ── */
+    #toastBox { position:fixed; bottom:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+    .toast { pointer-events:auto; animation: tIn 0.2s ease; transition: all 0.2s ease; }
+    @keyframes tIn { from { transform: translateY(10px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #d4d2c9; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #b8b5aa; }
-    .dark ::-webkit-scrollbar-thumb { background: #32353e; }
-    .dark ::-webkit-scrollbar-thumb:hover { background: #444754; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Filter pill states */
-    .filter-btn.active {
-      background-color: #18191c;
-      color: #ffffff;
-      border-color: #18191c;
-      font-weight: 600;
-    }
-    .dark .filter-btn.active {
-      background-color: #f3f3f6;
-      color: #111215;
-      border-color: #f3f3f6;
-    }
-
-    .mod-pill.active {
-      background-color: #1b4332;
-      color: #ffffff;
-      border-color: #1b4332;
-      font-weight: 600;
-    }
-    .dark .mod-pill.active {
-      background-color: #2d6a4f;
-      color: #ffffff;
-      border-color: #2d6a4f;
-    }
+    /* ── Progress bar ── */
+    .progress-track { background: #e5e7eb; height: 6px; border-radius: 9999px; overflow: hidden; }
+    .progress-fill { background: linear-gradient(90deg, #16a34a, #15803d); height: 100%; border-radius: 9999px; transition: width 0.5s ease; }
   </style>
 </head>
-<body class="drawer-closed arch-grid relative">
+<body class="drawer-closed">
 
-  <!-- Top Decorative Header Line -->
-  <div class="h-1 bg-gradient-to-r from-botanical-800 via-botanical-600 to-amber-700 w-full fixed top-0 left-0 z-30"></div>
+  <!-- Top accent stripe -->
+  <div class="h-1 w-full bg-gradient-to-r from-green-800 via-green-700 to-emerald-600 fixed top-0 left-0 z-30"></div>
 
-  <!-- Page Content Wrapper -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 relative z-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
 
-    <!-- Top Navigation & Brand Header -->
-    <header class="mb-10 pb-8 border-b border-[var(--border-main)]">
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        
-        <!-- Left: Brand & Hierarchy -->
-        <div class="space-y-3 max-w-2xl">
-          <div class="flex items-center gap-3">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-botanical-100 text-botanical-900 border border-botanical-500/20 dark:bg-botanical-950 dark:text-botanical-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-botanical-600 dark:bg-botanical-500"></span>
-              SDLC-PHARM • Architectural Matrix
+    <!-- ══════════ HEADER ══════════ -->
+    <header class="mb-10 pb-8 border-b border-gray-300">
+      <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
+        <div class="space-y-2 max-w-xl">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide uppercase st-live">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse"></span>
+              Live Architecture Inspector
             </span>
-            <span class="text-xs text-[var(--text-muted)] font-mono">v1.2.0</span>
+            <span class="text-xs text-gray-400 font-mono">v1.3</span>
           </div>
-
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif tracking-tight text-[var(--text-heading)] font-normal leading-[1.15]">
-            API Synchronization & <br class="hidden sm:inline" />
-            <span class="italic font-normal text-botanical-800 dark:text-botanical-500">Schema Inspector</span>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 leading-tight">
+            TES-Hub API &amp; Schema <br class="hidden sm:inline"/>Specification
           </h1>
-
-          <p class="text-sm md:text-base text-[var(--text-muted)] leading-relaxed font-normal">
-            Type-safe technical specification mapping <strong class="text-[var(--text-heading)] font-medium">TES-Hub</strong> React 19 client components directly to the Express 5 ESM backend and <strong class="text-[var(--text-heading)] font-medium">Neon PostgreSQL</strong> Drizzle ORM layer.
+          <p class="text-sm text-gray-500 leading-relaxed">
+            Full-stack trace mapping 67 endpoints from <strong class="text-gray-800">React 19</strong> client hooks through <strong class="text-gray-800">Express 5</strong> gateway to <strong class="text-gray-800">Neon PostgreSQL</strong> via Drizzle ORM.
           </p>
         </div>
 
-        <!-- Right: Scorecard & Theme Toggle -->
-        <div class="flex flex-col sm:flex-row lg:flex-col items-stretch lg:items-end gap-3 min-w-[320px]">
-          
-          <!-- Top Utility Bar: GitHub & Theme Switcher -->
-          <div class="flex items-center justify-between sm:justify-end gap-2.5">
-            <a href="https://github.com/luwmarin-dev/SDLC-PHARM" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-xs font-mono text-[var(--text-body)] hover:border-slate-400 transition shadow-[var(--shadow-sm)]">
-              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-              <span>luwmarin-dev/SDLC-PHARM</span>
-            </a>
-
-            <!-- Theme Toggle Button -->
-            <button onclick="toggleTheme()" id="themeToggleBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-body)] hover:border-slate-400 transition shadow-[var(--shadow-sm)]" title="Toggle Theme">
-              <span id="themeIcon">☀️</span>
-              <span id="themeLabel" class="hidden sm:inline">Alabaster</span>
-            </button>
+        <!-- Scorecard -->
+        <div class="card rounded-xl p-5 min-w-[320px] space-y-3">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-gray-500">Backend Implementation</span>
+            <span id="progressText" class="font-mono font-bold text-green-700">12.5%</span>
           </div>
-
-          <!-- Architectural Scorecard -->
-          <div class="luxe-card rounded-xl p-4 flex-1 lg:w-full space-y-3">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-medium text-[var(--text-muted)]">Backend Implementation Status</span>
-              <span id="progressText" class="font-mono font-bold text-botanical-800 dark:text-botanical-500">12.5%</span>
+          <div class="progress-track">
+            <div id="progressBar" class="progress-fill" style="width:12.5%"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-3 pt-3 border-t border-gray-200 text-center text-xs">
+            <div>
+              <div class="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">Live</div>
+              <div id="liveCount" class="font-mono text-xl font-bold text-green-700">6</div>
             </div>
-
-            <!-- Sleek Minimal Progress Line -->
-            <div class="w-full bg-[var(--bg-subtle)] h-1.5 rounded-full overflow-hidden border border-[var(--border-subtle)]">
-              <div id="progressBar" class="bg-botanical-800 dark:bg-botanical-500 h-full rounded-full transition-all duration-700" style="width: 12.5%;"></div>
+            <div class="border-x border-gray-200">
+              <div class="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">Mocked</div>
+              <div id="mockCount" class="font-mono text-xl font-bold text-gray-500">42</div>
             </div>
-
-            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-[var(--border-subtle)] text-center text-xs">
-              <div>
-                <span class="text-[10px] uppercase font-semibold text-[var(--text-muted)] block">Live Backend</span>
-                <span id="liveCount" class="font-mono text-base font-bold text-botanical-800 dark:text-botanical-400">6</span>
-              </div>
-              <div class="border-x border-[var(--border-subtle)]">
-                <span class="text-[10px] uppercase font-semibold text-[var(--text-muted)] block">MSW Mocked</span>
-                <span id="mockCount" class="font-mono text-base font-semibold text-[var(--text-body)]">42</span>
-              </div>
-              <div>
-                <span class="text-[10px] uppercase font-semibold text-[var(--text-muted)] block">Total Endpoints</span>
-                <span id="totalCount" class="font-mono text-base font-semibold text-[var(--text-body)]">48</span>
-              </div>
+            <div>
+              <div class="text-[10px] uppercase font-semibold text-gray-400 tracking-wider">Total</div>
+              <div id="totalCount" class="font-mono text-xl font-bold text-gray-800">48</div>
             </div>
+          </div>
+          <div class="flex items-center justify-end pt-2">
+            <a href="https://github.com/luwmarin-dev/SDLC-PHARM" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-mono text-gray-500 hover:text-gray-800 transition">
+              <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              luwmarin-dev/SDLC-PHARM
+            </a>
           </div>
         </div>
-
       </div>
     </header>
 
-    <!-- Architectural Pipeline Schematic (Triad Flow) -->
-    <section class="mb-10">
-      <div class="flex items-center justify-between mb-3 text-xs">
-        <span class="uppercase tracking-wider font-semibold text-[var(--text-muted)] text-[11px]">System Request Flow Schematic</span>
-        <span class="text-[var(--text-muted)] font-mono text-[11px]">Port 5173 ➔ Port 3000 ➔ Neon Cloud</span>
+    <!-- ══════════ PIPELINE SCHEMATIC ══════════ -->
+    <section class="section-panel p-5 md:p-6 mb-8">
+      <div class="flex items-center justify-between mb-4 text-xs">
+        <span class="uppercase tracking-widest font-semibold text-gray-400 text-[11px]">Full-Stack Request Pipeline</span>
+        <span class="text-gray-400 font-mono text-[11px]">:5173 → :3000 → Neon Cloud</span>
       </div>
-
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- 1. Client -->
-        <div class="luxe-card rounded-xl p-5 border-t-2 border-t-slate-800 dark:border-t-slate-200">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">01 / Presentation</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--bg-subtle)] text-[var(--text-body)] border border-[var(--border-main)]">React 19</span>
-          </div>
-          <h3 class="text-base font-bold text-[var(--text-heading)]">TES-Hub Frontend Client</h3>
-          <p class="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-            TypeScript SPA running on Vite. Zustand global stores (auth, notifications, toast). Centralized Axios client with MSW interception.
-          </p>
+        <div class="inset p-4 border-t-[3px] border-t-blue-500">
+          <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">01 · Client</div>
+          <div class="text-sm font-bold text-gray-900">React 19 + Zustand + Axios</div>
+          <p class="text-xs text-gray-500 mt-1">TypeScript SPA on Vite (:5173). MSW intercept for unmocked endpoints. Shadcn UI + i18n.</p>
         </div>
-
-        <!-- 2. Gateway -->
-        <div class="luxe-card rounded-xl p-5 border-t-2 border-t-botanical-800 dark:border-t-botanical-500">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">02 / Gateway & Auth</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-botanical-50 dark:bg-botanical-950 text-botanical-900 dark:text-botanical-400 border border-botanical-500/20">Express 5</span>
-          </div>
-          <h3 class="text-base font-bold text-[var(--text-heading)]">API Gateway & Middleware</h3>
-          <p class="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-            Strict input validation with Zod schemas. Cryptographic token verification using Jose HS256. Bcrypt password hashing (12 rounds).
-          </p>
+        <div class="inset p-4 border-t-[3px] border-t-green-600">
+          <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">02 · Gateway</div>
+          <div class="text-sm font-bold text-gray-900">Express 5 + Zod + Jose JWT</div>
+          <p class="text-xs text-gray-500 mt-1">Bcrypt 12-round hashing, token middleware, Helmet headers, typed error handler.</p>
         </div>
-
-        <!-- 3. Database -->
-        <div class="luxe-card rounded-xl p-5 border-t-2 border-t-amber-800 dark:border-t-amber-500">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">03 / Persistence</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-400 border border-amber-500/20">Neon Postgres</span>
-          </div>
-          <h3 class="text-base font-bold text-[var(--text-heading)]">Drizzle ORM & Cloud DB</h3>
-          <p class="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-            Serverless PostgreSQL pool with @epic-web/remember cache. Type-safe relations across users, settings, resources, and sessions.
-          </p>
+        <div class="inset p-4 border-t-[3px] border-t-amber-500">
+          <div class="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">03 · Database</div>
+          <div class="text-sm font-bold text-gray-900">Drizzle ORM + Neon PostgreSQL</div>
+          <p class="text-xs text-gray-500 mt-1">Serverless pool, @epic-web/remember cache. Users, settings, resources, sessions schemas.</p>
         </div>
       </div>
     </section>
 
-    <!-- Controls: Search, View Mode, Status Filter, Sort -->
-    <section class="space-y-4 mb-8">
+    <!-- ══════════ CONTROLS ══════════ -->
+    <section class="space-y-3 mb-6">
       <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
-        
-        <!-- Search Input -->
+        <!-- Search -->
         <div class="relative flex-1 max-w-lg">
-          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
-          <input 
-            type="text" 
-            id="searchInput" 
-            placeholder="Search route, component, table, or method (press / to focus)..." 
-            class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-xs text-[var(--text-heading)] placeholder-[var(--text-muted)] focus:outline-none focus:border-slate-500 transition shadow-[var(--shadow-sm)]"
-            oninput="renderView()"
-          >
-          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-muted)] hover:text-[var(--text-heading)]">
-            ✕
-          </button>
+          <input type="text" id="searchInput" placeholder="Search route, component, table… (press / to focus)" class="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-300 bg-white text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-600/30 focus:border-green-600 transition shadow-sm" oninput="renderView()">
+          <button id="clearBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700">✕</button>
         </div>
 
-        <!-- Controls Group -->
-        <div class="flex flex-wrap items-center gap-2.5">
-          <!-- Status Filter -->
-          <div class="inline-flex p-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
-            <button id="btnFilterAll" onclick="setStatusFilter('ALL')" class="filter-btn active px-3 py-1.5 rounded-lg text-xs transition">All (<span id="chipAllCount">48</span>)</button>
-            <button id="btnFilterLive" onclick="setStatusFilter('LIVE')" class="filter-btn px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">● Live (6)</button>
-            <button id="btnFilterMock" onclick="setStatusFilter('MOCK')" class="filter-btn px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">○ Mock (42)</button>
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Status filter -->
+          <div class="inline-flex p-1 rounded-xl bg-white border border-gray-200 shadow-sm">
+            <button id="btnAll"  onclick="setStatus('ALL')"  class="pill on px-3 py-1.5 rounded-lg text-xs">All (<span id="chipAll">48</span>)</button>
+            <button id="btnLive" onclick="setStatus('LIVE')" class="pill px-3 py-1.5 rounded-lg text-xs">● Live</button>
+            <button id="btnMock" onclick="setStatus('MOCK')" class="pill px-3 py-1.5 rounded-lg text-xs">○ Mock</button>
           </div>
 
-          <!-- View Mode Toggle -->
-          <div class="inline-flex p-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-[var(--shadow-sm)]">
-            <button id="btnViewGrid" onclick="setViewMode('grid')" title="Architectural Cards" class="p-1.5 rounded-lg text-[var(--text-heading)] bg-[var(--bg-subtle)]">
+          <!-- View mode -->
+          <div class="inline-flex p-1 rounded-xl bg-white border border-gray-200 shadow-sm">
+            <button id="vGrid"  onclick="setView('grid')"  class="pill on p-1.5 rounded-lg" title="Cards">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
             </button>
-            <button id="btnViewTable" onclick="setViewMode('table')" title="Dense Specification Table" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-heading)]">
+            <button id="vTable" onclick="setView('table')" class="pill p-1.5 rounded-lg" title="Table">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             </button>
-            <button id="btnViewGroup" onclick="setViewMode('group')" title="Grouped by Domain" class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-heading)]">
+            <button id="vGroup" onclick="setView('group')" class="pill p-1.5 rounded-lg" title="Grouped">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
             </button>
           </div>
 
-          <!-- Sort Select -->
-          <select id="sortSelect" onchange="renderView()" class="border border-[var(--border-main)] bg-[var(--bg-card)] rounded-xl px-3 py-2 text-xs font-medium text-[var(--text-body)] focus:outline-none focus:border-slate-500 shadow-[var(--shadow-sm)]">
-            <option value="id-asc">Sort: ID Sequence</option>
-            <option value="path-asc">Path (A-Z)</option>
-            <option value="method">HTTP Method</option>
-            <option value="status">Status (Live First)</option>
-            <option value="mod">Domain Module</option>
+          <select id="sortSel" onchange="renderView()" class="border border-gray-300 bg-white rounded-xl px-3 py-2 text-xs font-medium text-gray-600 focus:outline-none focus:border-green-600 shadow-sm">
+            <option value="id">Sort: Default</option>
+            <option value="path">Path A-Z</option>
+            <option value="method">Method</option>
+            <option value="status">Status (Live first)</option>
+            <option value="mod">Domain</option>
           </select>
         </div>
       </div>
 
-      <!-- Domain Modules Horizontal Chips -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-        <button onclick="setModuleFilter('ALL')" class="mod-pill active shrink-0 px-3 py-1.5 rounded-xl border border-slate-900 bg-slate-900 text-white font-medium" data-mod="ALL">All Domains (11)</button>
-        <button onclick="setModuleFilter('system')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="system">System (1)</button>
-        <button onclick="setModuleFilter('auth')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="auth">Authentication (7)</button>
-        <button onclick="setModuleFilter('learning')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="learning">Learning & Resources (10)</button>
-        <button onclick="setModuleFilter('user')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="user">Profile & Settings (8)</button>
-        <button onclick="setModuleFilter('articles')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="articles">Articles (5)</button>
-        <button onclick="setModuleFilter('courses')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="courses">Courses (6)</button>
-        <button onclick="setModuleFilter('sessions')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="sessions">Sessions (12)</button>
-        <button onclick="setModuleFilter('community')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="community">Community (9)</button>
-        <button onclick="setModuleFilter('notifs')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="notifs">Notifications (4)</button>
-        <button onclick="setModuleFilter('admin')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="admin">Moderation (4)</button>
-        <button onclick="setModuleFilter('contact')" class="mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400" data-mod="contact">Contact (1)</button>
+      <!-- Module chips -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+        <button onclick="setMod('ALL')" class="mod-pill on shrink-0 px-3 py-1.5 rounded-full" data-m="ALL">All Domains</button>
+        <button onclick="setMod('system')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="system">System</button>
+        <button onclick="setMod('auth')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="auth">Auth</button>
+        <button onclick="setMod('learning')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="learning">Learning</button>
+        <button onclick="setMod('user')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="user">Profile</button>
+        <button onclick="setMod('articles')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="articles">Articles</button>
+        <button onclick="setMod('courses')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="courses">Courses</button>
+        <button onclick="setMod('sessions')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="sessions">Sessions</button>
+        <button onclick="setMod('community')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="community">Community</button>
+        <button onclick="setMod('notifs')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="notifs">Notifs</button>
+        <button onclick="setMod('admin')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="admin">Admin</button>
+        <button onclick="setMod('contact')" class="mod-pill shrink-0 px-3 py-1.5 rounded-full" data-m="contact">Contact</button>
       </div>
     </section>
 
-    <!-- Main View Mount Point -->
-    <main id="viewContainer" class="mb-20">
-      <!-- Injected by JavaScript -->
-    </main>
+    <!-- ══════════ VIEW CONTAINER ══════════ -->
+    <main id="view" class="mb-16"></main>
 
-    <!-- Refined Editorial Colophon / Footer -->
-    <footer class="pt-8 pb-16 border-t border-[var(--border-main)] flex flex-col sm:flex-row items-center justify-between text-xs text-[var(--text-muted)] gap-4">
-      <div class="flex items-center gap-3">
-        <span class="font-serif italic text-sm text-[var(--text-heading)]">SDLC-PHARM</span>
-        <span>•</span>
-        <span>TES-Hub Technical Infrastructure Visualizer</span>
-      </div>
-      <div class="flex items-center gap-6 font-mono text-[11px]">
-        <span>PostgreSQL: <strong class="text-botanical-800 dark:text-botanical-400 font-medium">Neon Cloud</strong></span>
-        <span>Runtime: <strong class="text-[var(--text-heading)] font-medium">Express 5 ESM</strong></span>
-      </div>
+    <!-- Footer -->
+    <footer class="pt-6 border-t border-gray-300 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-2">
+      <span><strong class="text-gray-600">SDLC-PHARM</strong> · TES-Hub Infrastructure Spec</span>
+      <span class="font-mono">Neon PostgreSQL · Express 5 · Drizzle ORM</span>
     </footer>
   </div>
 
-  <!-- Slide-Over Inspector Drawer -->
-  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"></div>
-  <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full bg-[var(--bg-card)] border-l border-[var(--border-main)] shadow-2xl z-50 flex flex-col overflow-hidden">
-    
-    <!-- Drawer Header -->
-    <div class="p-6 border-b border-[var(--border-main)] bg-[var(--bg-subtle)] flex items-start justify-between gap-4">
+  <!-- ══════════ DRAWER ══════════ -->
+  <div id="drawerBackdrop" onclick="closeDrawer()" class="fixed inset-0 bg-black/40 z-40"></div>
+  <aside id="drawerPanel" class="fixed inset-y-0 right-0 max-w-2xl w-full bg-white border-l border-gray-200 shadow-2xl z-50 flex flex-col overflow-hidden">
+    <div class="p-6 border-b border-gray-200 bg-gray-50 flex items-start justify-between gap-4">
       <div>
         <div class="flex items-center gap-2 mb-2">
-          <span id="drawerMethod" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold badge-POST">POST</span>
-          <span id="drawerStatus" class="px-2.5 py-0.5 rounded-full text-xs font-semibold status-badge-live">● Live Backend</span>
-          <span id="drawerId" class="text-xs text-[var(--text-muted)] font-mono">#1</span>
+          <span id="dMethod" class="px-2.5 py-0.5 rounded text-xs font-mono m-POST">POST</span>
+          <span id="dStatus" class="px-2 py-0.5 rounded-full text-[11px] st-live">● Live</span>
+          <span id="dId" class="text-xs text-gray-400 font-mono">#1</span>
         </div>
-        <h2 id="drawerPath" class="text-xl font-mono font-bold text-[var(--text-heading)] select-all tracking-tight">/api/auth/signup</h2>
-        <p id="drawerDesc" class="text-xs text-[var(--text-muted)] mt-1.5 leading-relaxed">Registers new member, creates user row in Neon, hashes password with bcrypt.</p>
+        <h2 id="dPath" class="text-lg font-mono font-bold text-gray-900 select-all">/api/auth/signup</h2>
+        <p id="dDesc" class="text-xs text-gray-500 mt-1 leading-relaxed">Description</p>
       </div>
-      <button onclick="closeDrawer()" class="p-2 text-[var(--text-muted)] hover:text-[var(--text-heading)] rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] transition">
+      <button onclick="closeDrawer()" class="p-2 text-gray-400 hover:text-gray-700 rounded-lg border border-gray-200 bg-white transition">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
 
-    <!-- Drawer Navigation Tabs -->
-    <div class="flex border-b border-[var(--border-main)] bg-[var(--bg-card)] px-6 pt-3 gap-6 text-xs font-medium overflow-x-auto">
-      <button onclick="setDrawerTab('stack')" id="tabBtn-stack" class="pb-3 border-b-2 border-botanical-800 dark:border-botanical-500 text-[var(--text-heading)] font-semibold transition">Architecture & Stack</button>
-      <button onclick="setDrawerTab('drizzle')" id="tabBtn-drizzle" class="pb-3 border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">Drizzle Schema</button>
-      <button onclick="setDrawerTab('files')" id="tabBtn-files" class="pb-3 border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">File Mappings</button>
-      <button onclick="setDrawerTab('test')" id="tabBtn-test" class="pb-3 border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">Live Test Console</button>
+    <div class="flex border-b border-gray-200 bg-white px-6 pt-3 gap-5 text-xs overflow-x-auto">
+      <button onclick="setTab('stack')"   id="t-stack"   class="tab-btn on pb-3">Stack & Libs</button>
+      <button onclick="setTab('drizzle')" id="t-drizzle" class="tab-btn pb-3">Drizzle Schema</button>
+      <button onclick="setTab('files')"   id="t-files"   class="tab-btn pb-3">File Map</button>
+      <button onclick="setTab('test')"    id="t-test"    class="tab-btn pb-3">Test Console</button>
     </div>
 
-    <!-- Drawer Body -->
-    <div id="drawerBody" class="flex-1 overflow-y-auto p-6 space-y-6">
-      <!-- Dynamic Content -->
-    </div>
+    <div id="dBody" class="flex-1 overflow-y-auto p-6 space-y-5"></div>
 
-    <!-- Drawer Footer -->
-    <div class="p-4 border-t border-[var(--border-main)] bg-[var(--bg-subtle)] flex items-center justify-between text-xs text-[var(--text-muted)]">
-      <span>Target: <strong class="text-[var(--text-heading)] font-mono">http://localhost:3000</strong></span>
+    <div class="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between text-xs text-gray-400">
+      <span class="font-mono">localhost:3000</span>
       <div class="flex items-center gap-2">
-        <button onclick="copyCurrentCurl()" class="px-3 py-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-heading)] font-medium hover:border-slate-400 transition">
-          Copy cURL
-        </button>
-        <button onclick="closeDrawer()" class="px-3.5 py-1.5 rounded-lg bg-botanical-800 hover:bg-botanical-900 text-white font-medium transition dark:bg-botanical-600">
-          Done
-        </button>
+        <button onclick="copyCurl()" class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 font-medium hover:border-gray-400 transition">Copy cURL</button>
+        <button onclick="closeDrawer()" class="px-3.5 py-1.5 rounded-lg bg-green-700 hover:bg-green-800 text-white font-semibold transition">Done</button>
       </div>
     </div>
   </aside>
 
-  <!-- Modern Toast Container -->
-  <div id="toastContainer"></div>
+  <div id="toastBox"></div>
 
   <script>
-    let activeFilter = 'ALL';
-    let activeModule = 'ALL';
-    let currentView = 'grid'; // 'grid' | 'table' | 'group'
-    let currentDrawerItem = null;
-    let currentTab = 'stack';
+    let fStatus = 'ALL', fMod = 'ALL', vMode = 'grid', curItem = null, curTab = 'stack';
 
-    // Master API Data Specification
     const SYNC_DATA = [
       // 0. System & Infrastructure (LIVE)
       { 
@@ -900,218 +714,147 @@
     }
 
     // Scorecard Calculations
-    function calculateScorecard() {
+
+    function calc() {
       const live = SYNC_DATA.filter(d => d.status === 'LIVE').length;
       const total = SYNC_DATA.length;
       const pct = Math.round((live / total) * 100);
-
       document.getElementById('liveCount').innerText = live;
       document.getElementById('mockCount').innerText = total - live;
       document.getElementById('totalCount').innerText = total;
-      document.getElementById('chipAllCount').innerText = total;
+      document.getElementById('chipAll').innerText = total;
       document.getElementById('progressText').innerText = pct + '% (' + live + '/' + total + ')';
       document.getElementById('progressBar').style.width = pct + '%';
     }
 
-    function setStatusFilter(status) {
-      activeFilter = status;
-      ['All', 'Live', 'Mock'].forEach(s => {
-        const btn = document.getElementById('btnFilter' + s);
-        if (s.toUpperCase() === status) {
-          btn.className = 'filter-btn active px-3 py-1.5 rounded-lg text-xs transition';
-        } else {
-          btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)] transition';
-        }
+    function setStatus(s) {
+      fStatus = s;
+      ['All','Live','Mock'].forEach(k => {
+        const b = document.getElementById('btn'+k);
+        b.className = k.toUpperCase() === s ? 'pill on px-3 py-1.5 rounded-lg text-xs' : 'pill px-3 py-1.5 rounded-lg text-xs';
       });
       renderView();
     }
 
-    function setModuleFilter(mod) {
-      activeModule = mod;
-      document.querySelectorAll('.mod-pill').forEach(btn => {
-        if (btn.dataset.mod === mod) {
-          btn.className = 'mod-pill active shrink-0 px-3 py-1.5 rounded-xl border border-slate-900 bg-slate-900 text-white font-medium';
-        } else {
-          btn.className = 'mod-pill shrink-0 px-3 py-1.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:border-slate-400';
-        }
+    function setMod(m) {
+      fMod = m;
+      document.querySelectorAll('.mod-pill').forEach(b => {
+        b.className = b.dataset.m === m
+          ? 'mod-pill on shrink-0 px-3 py-1.5 rounded-full'
+          : 'mod-pill shrink-0 px-3 py-1.5 rounded-full';
       });
       renderView();
     }
 
-    function setViewMode(mode) {
-      currentView = mode;
-      document.getElementById('btnViewGrid').className = mode === 'grid' ? 'p-1.5 rounded-lg text-[var(--text-heading)] bg-[var(--bg-subtle)]' : 'p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-heading)]';
-      document.getElementById('btnViewTable').className = mode === 'table' ? 'p-1.5 rounded-lg text-[var(--text-heading)] bg-[var(--bg-subtle)]' : 'p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-heading)]';
-      document.getElementById('btnViewGroup').className = mode === 'group' ? 'p-1.5 rounded-lg text-[var(--text-heading)] bg-[var(--bg-subtle)]' : 'p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-heading)]';
+    function setView(v) {
+      vMode = v;
+      ['vGrid','vTable','vGroup'].forEach(id => {
+        const b = document.getElementById(id);
+        b.className = id === 'v' + v.charAt(0).toUpperCase() + v.slice(1) ? 'pill on p-1.5 rounded-lg' : 'pill p-1.5 rounded-lg';
+      });
       renderView();
     }
 
     function clearSearch() {
-      const input = document.getElementById('searchInput');
-      input.value = '';
-      document.getElementById('clearSearchBtn').classList.add('hidden');
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearBtn').classList.add('hidden');
       renderView();
     }
 
-    function getFilteredData() {
+    function getData() {
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
-      const sort = document.getElementById('sortSelect').value;
+      const sort = document.getElementById('sortSel').value;
+      document.getElementById('clearBtn').classList.toggle('hidden', !q);
 
-      document.getElementById('clearSearchBtn').classList.toggle('hidden', !q);
-
-      let filtered = SYNC_DATA.filter(item => {
-        const matchesStatus = activeFilter === 'ALL' || item.status === activeFilter;
-        const matchesMod = activeModule === 'ALL' || item.mod === activeModule;
-        const matchesQ = !q || 
-          item.path.toLowerCase().includes(q) ||
-          item.method.toLowerCase().includes(q) ||
-          item.caller.toLowerCase().includes(q) ||
-          item.table.toLowerCase().includes(q) ||
-          item.desc.toLowerCase().includes(q) ||
-          item.mod.toLowerCase().includes(q);
-        return matchesStatus && matchesMod && matchesQ;
+      let d = SYNC_DATA.filter(i => {
+        if (fStatus !== 'ALL' && i.status !== fStatus) return false;
+        if (fMod !== 'ALL' && i.mod !== fMod) return false;
+        if (q && ![i.path, i.method, i.caller, i.table, i.desc, i.mod].some(f => f.toLowerCase().includes(q))) return false;
+        return true;
       });
 
-      if (sort === 'path-asc') {
-        filtered.sort((a, b) => a.path.localeCompare(b.path));
-      } else if (sort === 'method') {
-        const order = { 'GET': 1, 'POST': 2, 'PATCH': 3, 'PUT': 4, 'DELETE': 5 };
-        filtered.sort((a, b) => (order[a.method] || 9) - (order[b.method] || 9));
-      } else if (sort === 'status') {
-        filtered.sort((a, b) => (a.status === 'LIVE' ? -1 : 1));
-      } else if (sort === 'mod') {
-        filtered.sort((a, b) => a.mod.localeCompare(b.mod));
-      } else {
-        filtered.sort((a, b) => a.id - b.id);
-      }
-
-      return filtered;
+      const so = { path: (a,b) => a.path.localeCompare(b.path), method: (a,b) => 'GET POST PATCH PUT DELETE'.indexOf(a.method) - 'GET POST PATCH PUT DELETE'.indexOf(b.method), status: (a,b) => (a.status==='LIVE'?-1:1), mod: (a,b) => a.mod.localeCompare(b.mod), id: (a,b) => a.id - b.id };
+      d.sort(so[sort] || so.id);
+      return d;
     }
 
     function renderView() {
-      const container = document.getElementById('viewContainer');
-      const data = getFilteredData();
-
-      if (data.length === 0) {
-        container.innerHTML = `
-          <div class="text-center py-20 luxe-card rounded-2xl">
-            <div class="text-3xl mb-2 font-serif italic text-[var(--text-muted)]">No Results</div>
-            <h3 class="text-sm font-semibold text-[var(--text-heading)]">No matching endpoints found</h3>
-            <p class="text-xs text-[var(--text-muted)] mt-1 max-w-sm mx-auto">Try clearing your search query or selecting a different domain category.</p>
-            <button onclick="clearSearch(); setStatusFilter('ALL'); setModuleFilter('ALL');" class="mt-4 px-4 py-1.5 rounded-lg bg-[var(--text-heading)] text-[var(--bg-card)] text-xs font-semibold">Reset Filters</button>
-          </div>
-        `;
+      const c = document.getElementById('view');
+      const d = getData();
+      if (!d.length) {
+        c.innerHTML = '<div class="card rounded-xl text-center py-16"><div class="text-2xl mb-2">∅</div><p class="text-sm font-semibold text-gray-700">No matching endpoints</p><p class="text-xs text-gray-400 mt-1">Try adjusting your filters.</p><button onclick="clearSearch();setStatus(\'ALL\');setMod(\'ALL\');" class="mt-3 px-4 py-1.5 rounded-lg bg-gray-900 text-white text-xs font-semibold">Reset</button></div>';
         return;
       }
-
-      if (currentView === 'grid') {
-        container.innerHTML = `
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${data.map(item => renderCardHtml(item)).join('')}
-          </div>
-        `;
-      } else if (currentView === 'table') {
-        container.innerHTML = renderTableHtml(data);
-      } else if (currentView === 'group') {
-        container.innerHTML = renderGroupHtml(data);
-      }
+      if (vMode === 'grid') c.innerHTML = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">' + d.map(cardHtml).join('') + '</div>';
+      else if (vMode === 'table') c.innerHTML = tableHtml(d);
+      else c.innerHTML = groupHtml(d);
     }
 
-    function renderCardHtml(item) {
-      const isLive = item.status === 'LIVE';
+    function cardHtml(i) {
+      const live = i.status === 'LIVE';
       return `
-        <div class="luxe-card rounded-xl p-5 flex flex-col justify-between cursor-pointer group" onclick="openDrawer(${item.id})">
-          <div>
-            <!-- Card Top Bar -->
-            <div class="flex items-center justify-between gap-2 mb-3">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold badge-${item.method}">
-                  ${item.method}
-                </span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isLive ? 'status-badge-live' : 'status-badge-mock'}">
-                  ${isLive ? '● Live Backend' : '○ MSW Mocked'}
-                </span>
-              </div>
-              <div class="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition">
-                <button onclick="event.stopPropagation(); copyText('${item.path}', 'Path copied!')" title="Copy Path" class="p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-heading)] transition">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                </button>
-                <button onclick="event.stopPropagation(); copyItemCurl(${item.id})" title="Copy cURL" class="p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text-heading)] transition text-xs font-mono">
-                  cURL
-                </button>
-              </div>
+        <div class="card ${live ? 'card-live' : ''} p-5 cursor-pointer group" onclick="openDrawer(${i.id})">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[11px] font-mono m-${i.method}">${i.method}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${live ? 'st-live' : 'st-mock'}">${live ? '● Live' : '○ Mocked'}</span>
             </div>
-
-            <!-- Path Display -->
-            <div class="font-mono text-xs text-[var(--text-heading)] font-semibold bg-[var(--bg-subtle)] px-3 py-2 rounded-lg border border-[var(--border-subtle)] mb-3 select-all flex items-center justify-between">
-              <span class="truncate">${item.path}</span>
-              <span class="text-[10px] font-normal text-[var(--text-muted)] ml-2">#${item.id}</span>
-            </div>
-
-            <!-- Architectural Mapping -->
-            <div class="grid grid-cols-2 gap-2 text-xs mb-3">
-              <div class="bg-[var(--bg-subtle)]/70 p-2.5 rounded-lg border border-[var(--border-subtle)]">
-                <span class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-0.5">Frontend Client</span>
-                <div class="font-medium text-[var(--text-heading)] truncate text-[11px]">${item.caller}</div>
-                <div class="text-[10px] text-[var(--text-muted)] font-mono truncate">${item.hook}</div>
-              </div>
-              <div class="bg-[var(--bg-subtle)]/70 p-2.5 rounded-lg border border-[var(--border-subtle)]">
-                <span class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block mb-0.5">Database Table</span>
-                <div class="font-mono font-medium text-[var(--text-heading)] truncate text-[11px]">${item.table}</div>
-                <div class="text-[10px] text-[var(--text-muted)]">Neon PostgreSQL</div>
-              </div>
-            </div>
-
-            <p class="text-xs text-[var(--text-muted)] leading-relaxed line-clamp-2">${item.desc}</p>
+            <span class="text-[10px] text-gray-300 font-mono group-hover:text-gray-400">#${i.id}</span>
           </div>
 
-          <!-- Card Footer -->
-          <div class="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between text-[11px] text-[var(--text-muted)]">
-            <span class="capitalize font-mono">${item.mod}</span>
-            <span class="group-hover:text-botanical-800 dark:group-hover:text-botanical-400 font-medium transition flex items-center gap-1">
-              Specification ➔
-            </span>
+          <div class="path-block px-3 py-2 text-xs mb-3 select-all">${i.path}</div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+            <div class="inset p-2.5">
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Frontend</div>
+              <div class="font-medium text-gray-800 truncate">${i.caller}</div>
+              <div class="text-[10px] text-gray-400 font-mono truncate">${i.hook}</div>
+            </div>
+            <div class="inset p-2.5">
+              <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">DB Table</div>
+              <div class="font-mono font-medium text-gray-800 truncate">${i.table}</div>
+              <div class="text-[10px] text-gray-400">Neon PostgreSQL</div>
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500 leading-relaxed line-clamp-2">${i.desc}</p>
+
+          <div class="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+            <span class="font-mono capitalize">${i.mod}</span>
+            <span class="text-gray-300 group-hover:text-green-700 font-medium transition">Inspect →</span>
           </div>
         </div>
       `;
     }
 
-    function renderTableHtml(data) {
+    function tableHtml(data) {
       return `
-        <div class="luxe-card rounded-xl overflow-hidden">
+        <div class="card rounded-xl overflow-hidden">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-[var(--bg-subtle)] border-b border-[var(--border-main)] text-[10px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">
+            <table class="w-full text-xs text-left">
+              <thead class="bg-gray-50 border-b border-gray-200 text-[10px] text-gray-400 uppercase tracking-wider font-semibold">
                 <tr>
                   <th class="py-3 px-4">Method</th>
-                  <th class="py-3 px-4">Endpoint Path</th>
+                  <th class="py-3 px-4">Endpoint</th>
                   <th class="py-3 px-4">Status</th>
-                  <th class="py-3 px-4">Frontend Caller</th>
-                  <th class="py-3 px-4">Drizzle Table</th>
+                  <th class="py-3 px-4">Caller</th>
+                  <th class="py-3 px-4">Table</th>
                   <th class="py-3 px-4">Domain</th>
-                  <th class="py-3 px-4 text-right">Inspect</th>
+                  <th class="py-3 px-4 text-right"></th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-[var(--border-subtle)]">
-                ${data.map(item => {
-                  const isLive = item.status === 'LIVE';
-                  return `
-                    <tr class="hover:bg-[var(--bg-subtle)]/60 transition cursor-pointer" onclick="openDrawer(${item.id})">
-                      <td class="py-3 px-4 font-mono">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-${item.method}">${item.method}</span>
-                      </td>
-                      <td class="py-3 px-4 font-mono font-semibold text-[var(--text-heading)] select-all">${item.path}</td>
-                      <td class="py-3 px-4">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${isLive ? 'status-badge-live' : 'status-badge-mock'}">
-                          ${isLive ? '● Live' : '○ Mock'}
-                        </span>
-                      </td>
-                      <td class="py-3 px-4 text-[var(--text-body)] truncate max-w-[150px]">${item.caller}</td>
-                      <td class="py-3 px-4 font-mono text-[var(--text-body)] truncate max-w-[150px]">${item.table}</td>
-                      <td class="py-3 px-4 capitalize text-[var(--text-muted)]">${item.mod}</td>
-                      <td class="py-3 px-4 text-right font-medium text-botanical-800 dark:text-botanical-400">View ➔</td>
-                    </tr>
-                  `;
+              <tbody class="divide-y divide-gray-100">
+                ${data.map(i => {
+                  const live = i.status === 'LIVE';
+                  return `<tr class="hover:bg-gray-50 cursor-pointer transition" onclick="openDrawer(${i.id})">
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-mono m-${i.method}">${i.method}</span></td>
+                    <td class="py-3 px-4 font-mono font-semibold text-gray-800">${i.path}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded-full text-[10px] ${live?'st-live':'st-mock'}">${live?'● Live':'○ Mock'}</span></td>
+                    <td class="py-3 px-4 text-gray-600 truncate max-w-[140px]">${i.caller}</td>
+                    <td class="py-3 px-4 font-mono text-gray-600 truncate max-w-[140px]">${i.table}</td>
+                    <td class="py-3 px-4 capitalize text-gray-400">${i.mod}</td>
+                    <td class="py-3 px-4 text-right text-green-700 font-medium">View →</td>
+                  </tr>`;
                 }).join('')}
               </tbody>
             </table>
@@ -1120,306 +863,231 @@
       `;
     }
 
-    function renderGroupHtml(data) {
-      const groups = {};
-      data.forEach(item => {
-        if (!groups[item.mod]) groups[item.mod] = [];
-        groups[item.mod].push(item);
-      });
-
-      return Object.keys(groups).map(mod => {
-        const items = groups[mod];
-        const liveCount = items.filter(i => i.status === 'LIVE').length;
+    function groupHtml(data) {
+      const g = {};
+      data.forEach(i => { (g[i.mod] = g[i.mod] || []).push(i); });
+      return Object.keys(g).map(mod => {
+        const items = g[mod];
+        const lc = items.filter(i => i.status === 'LIVE').length;
         return `
           <div class="mb-10">
-            <div class="flex items-center justify-between mb-4 pb-2 border-b border-[var(--border-main)]">
-              <div class="flex items-center gap-2.5">
-                <h3 class="capitalize text-lg font-serif font-medium text-[var(--text-heading)]">${mod}</h3>
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-mono bg-[var(--bg-subtle)] text-[var(--text-muted)] border border-[var(--border-main)]">${items.length} routes</span>
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-300">
+              <div class="flex items-center gap-2">
+                <h3 class="capitalize text-base font-bold text-gray-900">${mod}</h3>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-mono bg-gray-100 text-gray-500 border border-gray-200">${items.length}</span>
               </div>
-              <div class="text-xs text-[var(--text-muted)]">
-                Live: <strong class="text-botanical-800 dark:text-botanical-400 font-semibold">${liveCount}</strong> / ${items.length}
-              </div>
+              <span class="text-xs text-gray-400">Live: <strong class="text-green-700">${lc}</strong> / ${items.length}</span>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              ${items.map(item => renderCardHtml(item)).join('')}
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">${items.map(cardHtml).join('')}</div>
           </div>
         `;
       }).join('');
     }
 
-    // Slide-out Drawer logic
+    // ── Drawer ──
     function openDrawer(id) {
       const item = SYNC_DATA.find(d => d.id === id);
       if (!item) return;
-
-      currentDrawerItem = item;
-      document.getElementById('drawerMethod').innerText = item.method;
-      document.getElementById('drawerMethod').className = `px-2.5 py-0.5 rounded text-xs font-mono font-bold badge-${item.method}`;
-      document.getElementById('drawerStatus').innerText = item.status === 'LIVE' ? '● Live Backend' : '○ MSW Mocked';
-      document.getElementById('drawerStatus').className = `px-2.5 py-0.5 rounded-full text-xs font-semibold ${item.status === 'LIVE' ? 'status-badge-live' : 'status-badge-mock'}`;
-      document.getElementById('drawerId').innerText = `#${item.id}`;
-      document.getElementById('drawerPath').innerText = item.path;
-      document.getElementById('drawerDesc').innerText = item.desc;
-
-      setDrawerTab(currentTab);
-
-      document.body.classList.remove('drawer-closed');
-      document.body.classList.add('drawer-open');
+      curItem = item;
+      document.getElementById('dMethod').innerText = item.method;
+      document.getElementById('dMethod').className = 'px-2.5 py-0.5 rounded text-xs font-mono m-' + item.method;
+      document.getElementById('dStatus').innerText = item.status === 'LIVE' ? '● Live Backend' : '○ MSW Mocked';
+      document.getElementById('dStatus').className = 'px-2 py-0.5 rounded-full text-[11px] ' + (item.status === 'LIVE' ? 'st-live' : 'st-mock');
+      document.getElementById('dId').innerText = '#' + item.id;
+      document.getElementById('dPath').innerText = item.path;
+      document.getElementById('dDesc').innerText = item.desc;
+      setTab(curTab);
+      document.body.classList.replace('drawer-closed', 'drawer-open');
     }
 
-    function closeDrawer() {
-      document.body.classList.remove('drawer-open');
-      document.body.classList.add('drawer-closed');
-    }
+    function closeDrawer() { document.body.classList.replace('drawer-open', 'drawer-closed'); }
 
-    function setDrawerTab(tab) {
-      currentTab = tab;
-      const tabs = ['stack', 'drizzle', 'files', 'test'];
-      tabs.forEach(t => {
-        const btn = document.getElementById('tabBtn-' + t);
-        if (t === tab) {
-          btn.className = 'pb-3 border-b-2 border-botanical-800 dark:border-botanical-500 text-[var(--text-heading)] font-semibold transition';
-        } else {
-          btn.className = 'pb-3 border-b-2 border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)] transition';
-        }
+    function setTab(t) {
+      curTab = t;
+      ['stack','drizzle','files','test'].forEach(k => {
+        document.getElementById('t-'+k).className = k===t ? 'tab-btn on pb-3' : 'tab-btn pb-3';
       });
-
-      renderDrawerContent();
+      renderTab();
     }
 
-    function renderDrawerContent() {
-      const container = document.getElementById('drawerBody');
-      const item = currentDrawerItem;
+    function renderTab() {
+      const c = document.getElementById('dBody');
+      const item = curItem;
       if (!item) return;
 
-      const details = item.details || {
+      const det = item.details || {
         libraries: [
-          { name: 'Express 5.1.0', purpose: 'REST endpoint routing & HTTP lifecycle' },
-          { name: 'Drizzle ORM 0.44', purpose: 'Type-safe SQL queries against Neon PostgreSQL' },
-          { name: 'Zod 3.24', purpose: 'Request parameter & body validation schema' }
+          { name: 'Express 5.1.0', purpose: 'HTTP route handler' },
+          { name: 'Drizzle ORM', purpose: 'Type-safe PostgreSQL queries' },
+          { name: 'Zod 3.24', purpose: 'Request validation' }
         ],
-        database: `Maps to "${item.table}" table in Neon PostgreSQL. Client simulated via Mock Service Worker.`,
-        codeSnippet: `// Planned for Express 5 backend\n// Endpoint: ${item.method} ${item.path}`,
+        database: 'Maps to "' + item.table + '" in Neon PostgreSQL. Simulated via MSW.',
+        codeSnippet: '// Planned for backend\n// ' + item.method + ' ' + item.path,
         files: [
-          { role: 'Frontend Caller', path: `TES-Hub-main/src/pages/${item.caller}` },
-          { role: 'Planned Route', path: `backend/src/routes/${item.mod}Routes.ts` }
+          { role: 'Frontend', path: 'TES-Hub-main/src/pages/' + item.caller },
+          { role: 'Route', path: 'backend/src/routes/' + item.mod + 'Routes.ts' }
         ],
-        curl: `curl http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}`
+        curl: 'curl http://localhost:3000' + item.path.replace(/:[a-zA-Z]+/g, 'sample-id')
       };
 
-      if (currentTab === 'stack') {
-        container.innerHTML = `
+      if (curTab === 'stack') {
+        c.innerHTML = `
           <div>
-            <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-3">Architectural Modules & Dependencies</h3>
-            <div class="grid gap-2">
-              ${details.libraries.map(lib => `
-                <div class="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex items-start gap-3">
-                  <div class="font-mono text-xs font-semibold text-botanical-800 dark:text-botanical-400 shrink-0 pt-0.5">●</div>
-                  <div>
-                    <div class="font-mono text-xs font-bold text-[var(--text-heading)]">${lib.name}</div>
-                    <div class="text-xs text-[var(--text-muted)] mt-0.5">${lib.purpose}</div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-
-          <div class="pt-4 border-t border-[var(--border-subtle)]">
-            <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-2">Runtime Implementation Status</h3>
-            <p class="text-xs text-[var(--text-body)] leading-relaxed p-3.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
-              ${item.status === 'LIVE' ? '✅ This endpoint is running live in Express 5 with ESM TypeScript, connecting directly to the Neon PostgreSQL serverless cloud database.' : '⏳ This endpoint is currently simulated on the frontend with Mock Service Worker (MSW). Schema and controller planned for backend integration.'}
-            </p>
-          </div>
-        `;
-      } else if (currentTab === 'drizzle') {
-        container.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)]">Drizzle ORM Query & Operation</h3>
-              <button onclick="copyText(document.getElementById('drizzleCode').innerText, 'Drizzle code copied!')" class="text-xs text-botanical-800 dark:text-botanical-400 hover:underline font-medium">
-                Copy Code
-              </button>
-            </div>
-            <pre id="drizzleCode" class="p-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] text-xs font-mono text-[var(--text-heading)] overflow-x-auto leading-relaxed select-all">${details.codeSnippet}</pre>
-          </div>
-
-          <div class="pt-4 border-t border-[var(--border-subtle)]">
-            <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-2">Target Schema & Database</h3>
-            <div class="p-3.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-xs text-[var(--text-body)] space-y-1.5 font-mono">
-              <div>Table: <strong class="text-[var(--text-heading)]">${item.table}</strong></div>
-              <div>Database: <strong>Neon Serverless PostgreSQL (Cloud)</strong></div>
-              <div class="text-[var(--text-muted)] text-[11px] font-sans pt-1 leading-relaxed">${details.database}</div>
-            </div>
-          </div>
-        `;
-      } else if (currentTab === 'files') {
-        container.innerHTML = `
-          <div>
-            <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-3">Project File Locations</h3>
+            <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-3">Dependencies & Modules</h3>
             <div class="space-y-2">
-              ${details.files.map(f => `
-                <div class="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-subtle)] flex items-center justify-between gap-3">
-                  <div class="min-w-0">
-                    <span class="text-[10px] uppercase font-semibold text-[var(--text-muted)] block">${f.role}</span>
-                    <span class="font-mono text-xs text-[var(--text-heading)] truncate block select-all">${f.path}</span>
+              ${det.libraries.map(l => `
+                <div class="inset p-3 flex items-start gap-3">
+                  <div class="w-2 h-2 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                  <div>
+                    <div class="font-mono text-xs font-bold text-gray-800">${l.name}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">${l.purpose}</div>
                   </div>
-                  <button onclick="copyText('${f.path}', 'Path copied!')" class="text-xs font-medium px-2.5 py-1 rounded border border-[var(--border-main)] bg-[var(--bg-card)] hover:border-slate-400 transition shrink-0">
-                    Copy
-                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="pt-4 border-t border-gray-200">
+            <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-2">Implementation Status</h3>
+            <div class="inset p-3 text-xs text-gray-600 leading-relaxed">
+              ${item.status === 'LIVE' ? '✅ Running live in Express 5 ESM, connected to Neon PostgreSQL with Zod input validation.' : '⏳ Currently simulated with MSW on the frontend. Backend controller and Drizzle query ready for implementation.'}
+            </div>
+          </div>
+        `;
+      } else if (curTab === 'drizzle') {
+        c.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400">Drizzle Query</h3>
+              <button onclick="cp(document.getElementById('codeBlock').innerText, 'Code copied!')" class="text-xs text-green-700 hover:underline font-medium">Copy</button>
+            </div>
+            <pre id="codeBlock" class="path-block p-4 text-xs overflow-x-auto leading-relaxed select-all">${det.codeSnippet}</pre>
+          </div>
+          <div class="pt-4 border-t border-gray-200">
+            <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-2">Target Table</h3>
+            <div class="inset p-3 text-xs space-y-1">
+              <div class="text-gray-700">Table: <strong class="font-mono">${item.table}</strong></div>
+              <div class="text-gray-700">DB: <strong>Neon Serverless PostgreSQL</strong></div>
+              <div class="text-gray-500 pt-1 text-[11px] leading-relaxed">${det.database}</div>
+            </div>
+          </div>
+        `;
+      } else if (curTab === 'files') {
+        c.innerHTML = `
+          <div>
+            <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-3">Source Files</h3>
+            <div class="space-y-2">
+              ${det.files.map(f => `
+                <div class="inset p-3 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <span class="text-[10px] uppercase font-semibold text-gray-400 block">${f.role}</span>
+                    <span class="font-mono text-xs text-gray-800 truncate block select-all">${f.path}</span>
+                  </div>
+                  <button onclick="cp('${f.path}','Copied!')" class="text-xs font-medium px-2.5 py-1 rounded border border-gray-200 bg-white hover:border-gray-400 text-gray-600 transition shrink-0">Copy</button>
                 </div>
               `).join('')}
             </div>
           </div>
         `;
-      } else if (currentTab === 'test') {
-        container.innerHTML = `
-          <div class="p-4 rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] space-y-3">
+      } else if (curTab === 'test') {
+        c.innerHTML = `
+          <div class="inset p-4 space-y-3">
             <div class="flex items-center justify-between text-xs">
-              <span class="font-semibold text-[var(--text-heading)]">Interactive Live Request</span>
-              <span class="text-[10px] text-[var(--text-muted)] font-mono">Target: localhost:3000</span>
+              <span class="font-semibold text-gray-700">Live Request Tester</span>
+              <span class="text-[10px] text-gray-400 font-mono">Target: localhost:3000</span>
             </div>
-
             <div class="flex items-center gap-2">
-              <span class="px-2 py-1 rounded text-xs font-mono font-bold badge-${item.method}">${item.method}</span>
-              <input type="text" id="liveTestUrl" value="http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}" class="flex-1 border border-[var(--border-main)] bg-[var(--bg-card)] rounded-lg px-3 py-1.5 text-xs font-mono text-[var(--text-heading)]">
-              <button onclick="executeLiveTest()" class="px-3 py-1.5 rounded-lg bg-botanical-800 hover:bg-botanical-900 text-white font-medium text-xs transition dark:bg-botanical-600">
-                Send
-              </button>
+              <span class="px-2 py-1 rounded text-xs font-mono m-${item.method}">${item.method}</span>
+              <input type="text" id="testUrl" value="http://localhost:3000${item.path.replace(/:[a-zA-Z]+/g, 'sample-id')}" class="flex-1 border border-gray-300 bg-white rounded-lg px-3 py-1.5 text-xs font-mono text-gray-800">
+              <button onclick="runTest()" class="px-3 py-1.5 rounded-lg bg-green-700 hover:bg-green-800 text-white font-semibold text-xs transition">Send</button>
             </div>
-
-            <div id="liveTestResult" class="hidden pt-3 border-t border-[var(--border-main)]">
-              <div class="flex items-center justify-between text-[11px] mb-1 font-mono">
-                <span>Status: <strong id="liveStatus" class="text-botanical-800 dark:text-botanical-400">200 OK</strong></span>
-                <span id="liveDuration" class="text-[var(--text-muted)]">12ms</span>
+            <div id="testResult" class="hidden pt-2 border-t border-gray-200">
+              <div class="flex items-center justify-between text-[11px] font-mono mb-1">
+                <span>Status: <strong id="testStatus" class="text-green-700">200 OK</strong></span>
+                <span id="testTime" class="text-gray-400">12ms</span>
               </div>
-              <pre id="liveResponseBody" class="p-3 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-mono text-[var(--text-body)] max-h-48 overflow-y-auto"></pre>
+              <pre id="testBody" class="path-block p-3 text-xs max-h-48 overflow-y-auto"></pre>
             </div>
           </div>
-
           <div>
             <div class="flex items-center justify-between mb-2">
-              <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)]">cURL Command</h3>
-              <button onclick="copyText('${details.curl}', 'cURL copied!')" class="text-xs text-botanical-800 dark:text-botanical-400 hover:underline font-medium">
-                Copy
-              </button>
+              <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400">cURL Command</h3>
+              <button onclick="cp('${det.curl}','cURL copied!')" class="text-xs text-green-700 hover:underline font-medium">Copy</button>
             </div>
-            <pre class="p-3.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] text-xs font-mono text-[var(--text-heading)] overflow-x-auto select-all">${details.curl}</pre>
+            <pre class="path-block p-3 text-xs overflow-x-auto select-all">${det.curl}</pre>
           </div>
-
-          ${details.requestSample ? `
+          ${det.requestSample ? `
             <div>
-              <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-2">Request Body (JSON)</h3>
-              <pre class="p-3.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] text-xs font-mono text-[var(--text-body)] overflow-x-auto">${JSON.stringify(details.requestSample, null, 2)}</pre>
+              <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-2">Request Body</h3>
+              <pre class="inset p-3 text-xs font-mono text-gray-700 overflow-x-auto">${JSON.stringify(det.requestSample, null, 2)}</pre>
             </div>
           ` : ''}
-
-          ${details.responseSample ? `
+          ${det.responseSample ? `
             <div>
-              <h3 class="text-[11px] uppercase tracking-wider font-semibold text-[var(--text-muted)] mb-2">Response Sample (JSON)</h3>
-              <pre class="p-3.5 rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] text-xs font-mono text-botanical-800 dark:text-botanical-400 overflow-x-auto">${JSON.stringify(details.responseSample, null, 2)}</pre>
+              <h3 class="text-[11px] uppercase tracking-widest font-semibold text-gray-400 mb-2">Response Sample</h3>
+              <pre class="inset p-3 text-xs font-mono text-green-800 overflow-x-auto">${JSON.stringify(det.responseSample, null, 2)}</pre>
             </div>
           ` : ''}
         `;
       }
     }
 
-    async function executeLiveTest() {
-      const url = document.getElementById('liveTestUrl').value;
-      const resultBox = document.getElementById('liveTestResult');
-      const statusEl = document.getElementById('liveStatus');
-      const durationEl = document.getElementById('liveDuration');
-      const bodyEl = document.getElementById('liveResponseBody');
-
-      resultBox.classList.remove('hidden');
-      statusEl.innerText = 'Connecting...';
-      durationEl.innerText = '';
-      bodyEl.innerText = 'Sending request to Express 5 backend...';
-
-      const startTime = performance.now();
+    async function runTest() {
+      const url = document.getElementById('testUrl').value;
+      const box = document.getElementById('testResult');
+      const st = document.getElementById('testStatus');
+      const tm = document.getElementById('testTime');
+      const bd = document.getElementById('testBody');
+      box.classList.remove('hidden');
+      st.innerText = 'Connecting…'; tm.innerText = ''; bd.innerText = 'Sending…';
+      const t0 = performance.now();
       try {
-        const item = currentDrawerItem;
-        const options = {
-          method: item.method,
-          headers: { 'Content-Type': 'application/json' }
-        };
-        if (item.method !== 'GET' && item.details && item.details.requestSample) {
-          options.body = JSON.stringify(item.details.requestSample);
-        }
-
-        const res = await fetch(url, options);
-        const duration = Math.round(performance.now() - startTime);
+        const opts = { method: curItem.method, headers: { 'Content-Type': 'application/json' } };
+        if (curItem.method !== 'GET' && curItem.details && curItem.details.requestSample) opts.body = JSON.stringify(curItem.details.requestSample);
+        const res = await fetch(url, opts);
+        const ms = Math.round(performance.now() - t0);
         const data = await res.json().catch(() => ({ statusText: res.statusText }));
-
-        statusEl.innerText = res.status + ' ' + res.statusText;
-        statusEl.className = res.ok ? 'font-mono text-botanical-800 dark:text-botanical-400 font-bold' : 'font-mono text-rose-700 font-bold';
-        durationEl.innerText = duration + 'ms';
-        bodyEl.innerText = JSON.stringify(data, null, 2);
-        showToast('Request returned HTTP ' + res.status);
+        st.innerText = res.status + ' ' + res.statusText;
+        st.className = res.ok ? 'text-green-700 font-bold' : 'text-red-600 font-bold';
+        tm.innerText = ms + 'ms';
+        bd.innerText = JSON.stringify(data, null, 2);
+        toast('HTTP ' + res.status + ' – ' + ms + 'ms');
       } catch (err) {
-        const duration = Math.round(performance.now() - startTime);
-        statusEl.innerText = 'Connection Refused';
-        statusEl.className = 'font-mono text-rose-700 font-bold';
-        durationEl.innerText = duration + 'ms';
-        bodyEl.innerText = 'Could not connect to backend at ' + url + '.\nIs "npm run dev" running in the backend folder?\n\n' + err.message;
-        showToast('Backend offline on port 3000');
+        st.innerText = 'Connection failed'; st.className = 'text-red-600 font-bold';
+        tm.innerText = Math.round(performance.now() - t0) + 'ms';
+        bd.innerText = 'Cannot reach backend.\n' + err.message;
+        toast('Backend unreachable');
       }
     }
 
-    function copyCurrentCurl() {
-      if (!currentDrawerItem) return;
-      const details = currentDrawerItem.details;
-      const curl = details && details.curl ? details.curl : 'curl http://localhost:3000' + currentDrawerItem.path;
-      copyText(curl, 'cURL command copied!');
+    function copyCurl() {
+      if (!curItem) return;
+      const d = curItem.details;
+      cp(d && d.curl ? d.curl : 'curl http://localhost:3000' + curItem.path, 'cURL copied!');
     }
 
-    function copyItemCurl(id) {
-      const item = SYNC_DATA.find(d => d.id === id);
-      if (!item) return;
-      const curl = item.details && item.details.curl ? item.details.curl : 'curl http://localhost:3000' + item.path;
-      copyText(curl, 'cURL command copied!');
+    function toast(msg) {
+      const box = document.getElementById('toastBox');
+      const el = document.createElement('div');
+      el.className = 'toast px-4 py-2.5 rounded-lg bg-white border border-gray-200 shadow-lg text-xs font-medium text-gray-800 flex items-center gap-2';
+      el.innerHTML = '<span class="text-green-600">✓</span>' + msg;
+      box.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(8px)'; setTimeout(() => el.remove(), 200); }, 2000);
     }
 
-    // Modern Quiet Toast System
-    function showToast(msg) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      
-      toast.className = 'toast-item px-4 py-2.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg text-xs font-medium text-[var(--text-heading)] flex items-center gap-2';
-      toast.innerHTML = '<span class="text-botanical-700 dark:text-botanical-400 font-mono">✓</span><span>' + msg + '</span>';
-
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(8px)';
-        setTimeout(() => toast.remove(), 250);
-      }, 2200);
+    function cp(text, msg) {
+      navigator.clipboard.writeText(text).then(() => toast(msg || 'Copied!')).catch(() => toast('Copy failed'));
     }
 
-    function copyText(text, successMsg = 'Copied to clipboard!') {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast(successMsg);
-      }).catch(() => {
-        showToast('Failed to copy');
-      });
-    }
-
-    // Keyboard Shortcuts
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeDrawer();
-      if ((e.key === '/' || (e.ctrlKey && e.key === 'k') || (e.metaKey && e.key === 'k')) && document.activeElement !== document.getElementById('searchInput')) {
+      if ((e.key === '/' || (e.ctrlKey && e.key === 'k')) && document.activeElement.id !== 'searchInput') {
         e.preventDefault();
-        const input = document.getElementById('searchInput');
-        input.focus();
-        input.select();
+        const el = document.getElementById('searchInput');
+        el.focus(); el.select();
       }
     });
 
-    // Lifecycle Init
-    initTheme();
-    calculateScorecard();
+    calc();
     renderView();
   </script>
 </body>
